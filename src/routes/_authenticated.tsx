@@ -20,7 +20,9 @@ export const Route = createFileRoute(`/_authenticated`)({
       return authStateCollection.get(`auth`)!;
     } else {
       const result = await authClient.getSession();
-      authStateCollection.insert({ id: `auth`, ...result.data });
+      if (result.data) {
+        authStateCollection.insert({ id: `auth`, ...result.data });
+      }
       return result.data;
     }
   },
