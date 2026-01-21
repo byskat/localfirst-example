@@ -7,7 +7,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type * as React from "react";
 
-import appCss from "../styles.css?url";
+import "../styles.css";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -21,12 +21,6 @@ export const Route = createRootRoute({
       },
       {
         title: `TanStack Start/DB/Electric Starter`,
-      },
-    ],
-    links: [
-      {
-        rel: `stylesheet`,
-        href: appCss,
       },
     ],
   }),
