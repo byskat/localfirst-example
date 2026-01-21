@@ -1,10 +1,13 @@
-import * as React from "react"
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router"
-import { useEffect, useState } from "react"
-import { Outlet } from "@tanstack/react-router"
-import { authClient, authStateCollection } from "@/lib/auth-client"
-import { useLiveQuery } from "@tanstack/react-db"
-import { projectCollection } from "@/lib/collections"
+import { useLiveQuery } from "@tanstack/react-db";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useNavigate,
+} from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { authClient, authStateCollection } from "@/lib/auth-client";
+import { projectCollection } from "@/lib/collections";
 
 export const Route = createFileRoute(`/_authenticated`)({
   ssr: false, // Disable SSR - run beforeLoad only on client
@@ -14,21 +17,21 @@ export const Route = createFileRoute(`/_authenticated`)({
       authStateCollection.get(`auth`) &&
       authStateCollection.get(`auth`)?.session.expiresAt > new Date()
     ) {
-      return authStateCollection.get(`auth`)!
+      return authStateCollection.get(`auth`)!;
     } else {
-      const result = await authClient.getSession()
-      authStateCollection.insert({ id: `auth`, ...result.data })
-      return result.data
+      const result = await authClient.getSession();
+      authStateCollection.insert({ id: `auth`, ...result.data });
+      return result.data;
     }
   },
   errorComponent: ({ error }) => {
     const ErrorComponent = () => {
-      const { data: session } = authClient.useSession()
+      const { data: session } = authClient.useSession();
 
       // Only redirect to login if user is not authenticated
       if (!session && typeof window !== `undefined`) {
-        window.location.href = `/login`
-        return null
+        window.location.href = `/login`;
+        return null;
       }
 
       // For other errors, render an error message
@@ -47,27 +50,27 @@ export const Route = createFileRoute(`/_authenticated`)({
             </button>
           </div>
         </div>
-      )
-    }
+      );
+    };
 
-    return <ErrorComponent />
+    return <ErrorComponent />;
   },
-})
+});
 
 function AuthenticatedLayout() {
-  const { data: session, isPending } = authClient.useSession()
-  const navigate = useNavigate()
-  const [showNewProjectForm, setShowNewProjectForm] = useState(false)
-  const [newProjectName, setNewProjectName] = useState(``)
+  const { data: session, isPending } = authClient.useSession();
+  const navigate = useNavigate();
+  const [showNewProjectForm, setShowNewProjectForm] = useState(false);
+  const [newProjectName, setNewProjectName] = useState(``);
 
   const { data: projects, isLoading } = useLiveQuery((q) =>
     q.from({ projectCollection })
-  )
+  );
 
   // Create an initial default project if the user doesn't yet have any.
   useEffect(() => {
     if (session && projects && !isLoading) {
-      const hasProject = projects.length > 0
+      const hasProject = projects.length > 0;
       if (!hasProject) {
         projectCollection.insert({
           id: Math.floor(Math.random() * 100000),
@@ -76,15 +79,15 @@ function AuthenticatedLayout() {
           owner_id: session.user.id,
           shared_user_ids: [],
           created_at: new Date(),
-        })
+        });
       }
     }
-  }, [session, projects, isLoading])
+  }, [session, projects, isLoading]);
 
   const handleLogout = async () => {
-    await authClient.signOut()
-    navigate({ to: `/login` })
-  }
+    await authClient.signOut();
+    navigate({ to: `/login` });
+  };
 
   const handleCreateProject = () => {
     if (newProjectName.trim() && session) {
@@ -95,18 +98,18 @@ function AuthenticatedLayout() {
         owner_id: session.user.id,
         shared_user_ids: [],
         created_at: new Date(),
-      })
-      setNewProjectName(``)
-      setShowNewProjectForm(false)
+      });
+      setNewProjectName(``);
+      setShowNewProjectForm(false);
     }
-  }
+  };
 
   if (isPending) {
-    return null
+    return null;
   }
 
   if (!session) {
-    return null
+    return null;
   }
 
   return (
@@ -204,5 +207,5 @@ function AuthenticatedLayout() {
         </main>
       </div>
     </div>
-  )
+  );
 }

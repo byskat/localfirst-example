@@ -1,21 +1,21 @@
-import { betterAuth } from "better-auth"
-import { drizzleAdapter } from "better-auth/adapters/drizzle"
-import { tanstackStartCookies } from "better-auth/tanstack-start"
-import { db } from "@/db/connection" // your drizzle instance
-import * as schema from "@/db/auth-schema"
-import { networkInterfaces } from "node:os"
+import { networkInterfaces } from "node:os";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { tanstackStartCookies } from "better-auth/tanstack-start";
+import * as schema from "@/db/auth-schema";
+import { db } from "@/db/connection"; // your drizzle instance
 
 // Get network IP for trusted origins
-const nets = networkInterfaces()
-let networkIP = `192.168.1.1` // fallback
+const nets = networkInterfaces();
+let networkIP = `192.168.1.1`; // fallback
 
 for (const name of Object.keys(nets)) {
-  const netInterfaces = nets[name]
+  const netInterfaces = nets[name];
   if (netInterfaces) {
     for (const net of netInterfaces) {
       if (net.family === `IPv4` && !net.internal) {
-        networkIP = net.address
-        break
+        networkIP = net.address;
+        break;
       }
     }
   }
@@ -40,4 +40,4 @@ export const auth = betterAuth({
     `http://localhost:5173`, // fallback for direct Vite access
   ],
   plugins: [tanstackStartCookies()],
-})
+});

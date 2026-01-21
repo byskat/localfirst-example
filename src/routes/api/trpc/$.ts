@@ -1,19 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch"
-import { router } from "@/lib/trpc"
-import { projectsRouter } from "@/lib/trpc/projects"
-import { todosRouter } from "@/lib/trpc/todos"
-import { usersRouter } from "@/lib/trpc/users"
-import { db } from "@/db/connection"
-import { auth } from "@/lib/auth"
+import { createFileRoute } from "@tanstack/react-router";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
+import { db } from "@/db/connection";
+import { auth } from "@/lib/auth";
+import { router } from "@/lib/trpc";
+import { projectsRouter } from "@/lib/trpc/projects";
+import { todosRouter } from "@/lib/trpc/todos";
+import { usersRouter } from "@/lib/trpc/users";
 
 export const appRouter = router({
   projects: projectsRouter,
   todos: todosRouter,
   users: usersRouter,
-})
+});
 
-export type AppRouter = typeof appRouter
+export type AppRouter = typeof appRouter;
 
 const serve = ({ request }: { request: Request }) => {
   return fetchRequestHandler({
@@ -24,8 +24,8 @@ const serve = ({ request }: { request: Request }) => {
       db,
       session: await auth.api.getSession({ headers: request.headers }),
     }),
-  })
-}
+  });
+};
 
 export const Route = createFileRoute(`/api/trpc/$`)({
   server: {
@@ -34,4 +34,4 @@ export const Route = createFileRoute(`/api/trpc/$`)({
       POST: serve,
     },
   },
-})
+});

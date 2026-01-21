@@ -1,13 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router"
-import { useLiveQuery, eq } from "@tanstack/react-db"
-import { useState } from "react"
-import { authClient } from "@/lib/auth-client"
+import { eq, useLiveQuery } from "@tanstack/react-db";
+import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
+import type { Todo } from "@/db/schema";
+import { authClient } from "@/lib/auth-client";
 import {
-  todoCollection,
   projectCollection,
+  todoCollection,
   usersCollection,
-} from "@/lib/collections"
-import { type Todo } from "@/db/schema"
+} from "@/lib/collections";
 
 export const Route = createFileRoute(`/_authenticated/project/$projectId`)({
   component: ProjectPage,
@@ -17,15 +17,15 @@ export const Route = createFileRoute(`/_authenticated/project/$projectId`)({
       projectCollection.preload(),
       todoCollection.preload(),
       usersCollection.preload(),
-    ])
-    return null
+    ]);
+    return null;
   },
-})
+});
 
 function ProjectPage() {
-  const { projectId } = Route.useParams()
-  const { data: session } = authClient.useSession()
-  const [newTodoText, setNewTodoText] = useState(``)
+  const { projectId } = Route.useParams();
+  const { data: session } = authClient.useSession();
+  const [newTodoText, setNewTodoText] = useState(``);
 
   const { data: todos } = useLiveQuery(
     (q) =>
@@ -36,11 +36,11 @@ function ProjectPage() {
         )
         .orderBy(({ todoCollection }) => todoCollection.created_at),
     [projectId]
-  )
+  );
 
   const { data: users } = useLiveQuery((q) =>
     q.from({ users: usersCollection })
-  )
+  );
 
   const { data: usersInProjects } = useLiveQuery(
     (q) =>
@@ -54,8 +54,8 @@ function ProjectPage() {
           owner: projects.owner_id,
         })),
     [projectId]
-  )
-  const usersInProject = usersInProjects?.[0]
+  );
+  const usersInProject = usersInProjects?.[0];
 
   const { data: projects } = useLiveQuery(
     (q) =>
@@ -65,8 +65,8 @@ function ProjectPage() {
           eq(projectCollection.id, Number.parseInt(projectId, 10))
         ),
     [projectId]
-  )
-  const project = projects[0]
+  );
+  const project = projects[0];
 
   const addTodo = () => {
     if (newTodoText.trim() && session) {
@@ -75,26 +75,26 @@ function ProjectPage() {
         id: Math.floor(Math.random() * 100000),
         text: newTodoText.trim(),
         completed: false,
-        project_id: Number.parseInt(projectId),
+        project_id: Number.parseInt(projectId, 10),
         user_ids: [],
         created_at: new Date(),
-      })
-      setNewTodoText(``)
+      });
+      setNewTodoText(``);
     }
-  }
+  };
 
   const toggleTodo = (todo: Todo) => {
     todoCollection.update(todo.id, (draft) => {
-      draft.completed = !draft.completed
-    })
-  }
+      draft.completed = !draft.completed;
+    });
+  };
 
   const deleteTodo = (id: number) => {
-    todoCollection.delete(id)
-  }
+    todoCollection.delete(id);
+  };
 
   if (!project) {
-    return <div className="p-6">Project not found</div>
+    return <div className="p-6">Project not found</div>;
   }
 
   return (
@@ -103,11 +103,11 @@ function ProjectPage() {
         <h1
           className="text-2xl font-bold text-gray-800 mb-2 cursor-pointer hover:bg-gray-50 p-0 rounded"
           onClick={() => {
-            const newName = prompt(`Edit project name:`, project.name)
+            const newName = prompt(`Edit project name:`, project.name);
             if (newName && newName !== project.name) {
               projectCollection.update(project.id, (draft) => {
-                draft.name = newName
-              })
+                draft.name = newName;
+              });
             }
           }}
         >
@@ -120,11 +120,11 @@ function ProjectPage() {
             const newDescription = prompt(
               `Edit project description:`,
               project.description || ``
-            )
+            );
             if (newDescription !== null) {
               projectCollection.update(project.id, (draft) => {
-                draft.description = newDescription
-              })
+                draft.description = newDescription;
+              });
             }
           }}
         >
@@ -196,9 +196,9 @@ function ProjectPage() {
               ? users
               : users?.filter((user) => usersInProject?.users.includes(user.id))
             )?.map((user) => {
-              const isInProject = usersInProject?.users.includes(user.id)
-              const isOwner = user.id === usersInProject?.owner
-              const canEditMembership = session?.user.id === project.owner_id
+              const isInProject = usersInProject?.users.includes(user.id);
+              const isOwner = user.id === usersInProject?.owner;
+              const canEditMembership = session?.user.id === project.owner_id;
               return (
                 <div
                   key={user.id}
@@ -214,12 +214,12 @@ function ProjectPage() {
                             draft.shared_user_ids =
                               draft.shared_user_ids.filter(
                                 (id) => id !== user.id
-                              )
-                          })
+                              );
+                          });
                         } else if (!isInProject) {
                           projectCollection.update(project.id, (draft) => {
-                            draft.shared_user_ids.push(user.id)
-                          })
+                            draft.shared_user_ids.push(user.id);
+                          });
                         }
                       }}
                       disabled={isOwner}
@@ -233,11 +233,11 @@ function ProjectPage() {
                     </span>
                   )}
                 </div>
-              )
+              );
             })}
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

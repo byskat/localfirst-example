@@ -1,12 +1,12 @@
-import { router, authedProcedure, generateTxId } from "@/lib/trpc"
-import { z } from "zod"
-import { TRPCError } from "@trpc/server"
-import { eq, and } from "drizzle-orm"
+import { TRPCError } from "@trpc/server";
+import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 import {
-  projectsTable,
   createProjectSchema,
+  projectsTable,
   updateProjectSchema,
-} from "@/db/schema"
+} from "@/db/schema";
+import { authedProcedure, generateTxId, router } from "@/lib/trpc";
 
 export const projectsRouter = router({
   create: authedProcedure
@@ -16,19 +16,19 @@ export const projectsRouter = router({
         throw new TRPCError({
           code: `FORBIDDEN`,
           message: `You can only create projects you own`,
-        })
+        });
       }
 
       const result = await ctx.db.transaction(async (tx) => {
-        const txid = await generateTxId(tx)
+        const txid = await generateTxId(tx);
         const [newItem] = await tx
           .insert(projectsTable)
           .values(input)
-          .returning()
-        return { item: newItem, txid }
-      })
+          .returning();
+        return { item: newItem, txid };
+      });
 
-      return result
+      return result;
     }),
 
   update: authedProcedure
@@ -40,7 +40,7 @@ export const projectsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
-        const txid = await generateTxId(tx)
+        const txid = await generateTxId(tx);
         const [updatedItem] = await tx
           .update(projectsTable)
           .set(input.data)
@@ -50,26 +50,26 @@ export const projectsRouter = router({
               eq(projectsTable.owner_id, ctx.session.user.id)
             )
           )
-          .returning()
+          .returning();
 
         if (!updatedItem) {
           throw new TRPCError({
             code: `NOT_FOUND`,
             message: `Project not found or you do not have permission to update it`,
-          })
+          });
         }
 
-        return { item: updatedItem, txid }
-      })
+        return { item: updatedItem, txid };
+      });
 
-      return result
+      return result;
     }),
 
   delete: authedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
-        const txid = await generateTxId(tx)
+        const txid = await generateTxId(tx);
         const [deletedItem] = await tx
           .delete(projectsTable)
           .where(
@@ -78,18 +78,18 @@ export const projectsRouter = router({
               eq(projectsTable.owner_id, ctx.session.user.id)
             )
           )
-          .returning()
+          .returning();
 
         if (!deletedItem) {
           throw new TRPCError({
             code: `NOT_FOUND`,
             message: `Project not found or you do not have permission to delete it`,
-          })
+          });
         }
 
-        return { item: deletedItem, txid }
-      })
+        return { item: deletedItem, txid };
+      });
 
-      return result
+      return result;
     }),
-})
+});

@@ -1,23 +1,23 @@
-import * as React from "react"
-import { createFileRoute } from "@tanstack/react-router"
-import { authClient } from "@/lib/auth-client"
-import { useState } from "react"
+import { createFileRoute } from "@tanstack/react-router";
+import type * as React from "react";
+import { useState } from "react";
+import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute(`/login`)({
   component: Layout,
   ssr: false,
-})
+});
 
 function Layout() {
-  const [email, setEmail] = useState(``)
-  const [password, setPassword] = useState(``)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(``)
+  const [email, setEmail] = useState(``);
+  const [password, setPassword] = useState(``);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(``);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError(``)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(``);
 
     try {
       let { data: _data, error } = await authClient.signUp.email(
@@ -28,10 +28,10 @@ function Layout() {
         },
         {
           onSuccess: () => {
-            window.location.href = `/`
+            window.location.href = `/`;
           },
         }
-      )
+      );
 
       if (error?.code === `USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL`) {
         const result = await authClient.signIn.email(
@@ -41,27 +41,27 @@ function Layout() {
           },
           {
             onSuccess: async () => {
-              await authClient.getSession()
-              window.location.href = `/`
+              await authClient.getSession();
+              window.location.href = `/`;
             },
           }
-        )
+        );
 
-        _data = result.data
-        error = result.error
+        _data = result.data;
+        error = result.error;
       }
 
       if (error) {
-        console.error(`Authentication error:`, error)
-        setError(error.message || `Authentication failed`)
+        console.error(`Authentication error:`, error);
+        setError(error.message || `Authentication failed`);
       }
     } catch (err) {
-      console.error(`Unexpected error:`, err)
-      setError(`An unexpected error occurred`)
+      console.error(`Unexpected error:`, err);
+      setError(`An unexpected error occurred`);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -132,5 +132,5 @@ function Layout() {
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -1,32 +1,32 @@
-import { initTRPC, TRPCError } from "@trpc/server"
-import { auth } from "@/lib/auth"
-import { db } from "@/db/connection"
-import { sql } from "drizzle-orm"
+import { initTRPC, TRPCError } from "@trpc/server";
+import { sql } from "drizzle-orm";
+import type { db } from "@/db/connection";
+import type { auth } from "@/lib/auth";
 
 export type Context = {
-  session: Awaited<ReturnType<typeof auth.api.getSession>>
-  db: typeof db
-}
+  session: Awaited<ReturnType<typeof auth.api.getSession>>;
+  db: typeof db;
+};
 
-const t = initTRPC.context<Context>().create()
+const t = initTRPC.context<Context>().create();
 
-export const router = t.router
-export const procedure = t.procedure
-export const middleware = t.middleware
+export const router = t.router;
+export const procedure = t.procedure;
+export const middleware = t.middleware;
 
 export const isAuthed = middleware(async ({ ctx, next }) => {
   if (!ctx.session?.user) {
-    throw new TRPCError({ code: `UNAUTHORIZED` })
+    throw new TRPCError({ code: `UNAUTHORIZED` });
   }
   return next({
     ctx: {
       ...ctx,
       session: ctx.session,
     },
-  })
-})
+  });
+});
 
-export const authedProcedure = procedure.use(isAuthed)
+export const authedProcedure = procedure.use(isAuthed);
 
 // Helper function to generate transaction ID for Electric sync
 export async function generateTxId(
@@ -41,12 +41,12 @@ export async function generateTxId(
   // in the client).
   const result = await tx.execute(
     sql`SELECT pg_current_xact_id()::xid::text as txid`
-  )
-  const txid = result.rows[0]?.txid
+  );
+  const txid = result.rows[0]?.txid;
 
   if (txid === undefined) {
-    throw new Error(`Failed to get transaction ID`)
+    throw new Error(`Failed to get transaction ID`);
   }
 
-  return parseInt(txid as string, 10)
+  return parseInt(txid as string, 10);
 }

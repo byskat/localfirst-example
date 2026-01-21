@@ -1,13 +1,13 @@
-import { router, authedProcedure } from "@/lib/trpc"
-import { z } from "zod"
-import { TRPCError } from "@trpc/server"
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { authedProcedure, router } from "@/lib/trpc";
 
 export const usersRouter = router({
   create: authedProcedure.input(z.any()).mutation(async () => {
     throw new TRPCError({
       code: `FORBIDDEN`,
       message: `Can't create new users through API`,
-    })
+    });
   }),
 
   update: authedProcedure
@@ -16,7 +16,7 @@ export const usersRouter = router({
       throw new TRPCError({
         code: `FORBIDDEN`,
         message: `Can't edit users through API`,
-      })
+      });
     }),
 
   delete: authedProcedure
@@ -25,6 +25,6 @@ export const usersRouter = router({
       throw new TRPCError({
         code: `FORBIDDEN`,
         message: `Can't delete users through API`,
-      })
+      });
     }),
-})
+});

@@ -1,20 +1,20 @@
-import { router, authedProcedure, generateTxId } from "@/lib/trpc"
-import { z } from "zod"
-import { TRPCError } from "@trpc/server"
-import { eq, and, arrayContains } from "drizzle-orm"
-import { todosTable, createTodoSchema, updateTodoSchema } from "@/db/schema"
+import { TRPCError } from "@trpc/server";
+import { and, arrayContains, eq } from "drizzle-orm";
+import { z } from "zod";
+import { createTodoSchema, todosTable, updateTodoSchema } from "@/db/schema";
+import { authedProcedure, generateTxId, router } from "@/lib/trpc";
 
 export const todosRouter = router({
   create: authedProcedure
     .input(createTodoSchema)
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
-        const txid = await generateTxId(tx)
-        const [newItem] = await tx.insert(todosTable).values(input).returning()
-        return { item: newItem, txid }
-      })
+        const txid = await generateTxId(tx);
+        const [newItem] = await tx.insert(todosTable).values(input).returning();
+        return { item: newItem, txid };
+      });
 
-      return result
+      return result;
     }),
 
   update: authedProcedure
@@ -26,7 +26,7 @@ export const todosRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
-        const txid = await generateTxId(tx)
+        const txid = await generateTxId(tx);
         const [updatedItem] = await tx
           .update(todosTable)
           .set(input.data)
@@ -36,26 +36,26 @@ export const todosRouter = router({
               arrayContains(todosTable.user_ids, [ctx.session.user.id])
             )
           )
-          .returning()
+          .returning();
 
         if (!updatedItem) {
           throw new TRPCError({
             code: `NOT_FOUND`,
             message: `Todo not found or you do not have permission to update it`,
-          })
+          });
         }
 
-        return { item: updatedItem, txid }
-      })
+        return { item: updatedItem, txid };
+      });
 
-      return result
+      return result;
     }),
 
   delete: authedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
-        const txid = await generateTxId(tx)
+        const txid = await generateTxId(tx);
         const [deletedItem] = await tx
           .delete(todosTable)
           .where(
@@ -64,18 +64,18 @@ export const todosRouter = router({
               arrayContains(todosTable.user_ids, [ctx.session.user.id])
             )
           )
-          .returning()
+          .returning();
 
         if (!deletedItem) {
           throw new TRPCError({
             code: `NOT_FOUND`,
             message: `Todo not found or you do not have permission to delete it`,
-          })
+          });
         }
 
-        return { item: deletedItem, txid }
-      })
+        return { item: deletedItem, txid };
+      });
 
-      return result
+      return result;
     }),
-})
+});
