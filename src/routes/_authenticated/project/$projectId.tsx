@@ -1,6 +1,19 @@
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
+import { Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import type { Todo } from "@/db/schema";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -94,103 +107,117 @@ function ProjectPage() {
   };
 
   if (!project) {
-    return <div className="p-6">Project not found</div>;
+    return (
+      <div className="flex items-center justify-center h-full p-6">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-muted-foreground">Project not found</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-2xl mx-auto">
-        <h1
-          className="text-2xl font-bold text-gray-800 mb-2 cursor-pointer hover:bg-gray-50 p-0 rounded"
-          onClick={() => {
-            const newName = prompt(`Edit project name:`, project.name);
-            if (newName && newName !== project.name) {
-              projectCollection.update(project.id, (draft) => {
-                draft.name = newName;
-              });
-            }
-          }}
-        >
-          {project.name}
-        </h1>
-
-        <p
-          className="text-gray-600 mb-3 cursor-pointer hover:bg-gray-50 p-0 rounded min-h-[1.5rem]"
-          onClick={() => {
-            const newDescription = prompt(
-              `Edit project description:`,
-              project.description || ``
-            );
-            if (newDescription !== null) {
-              projectCollection.update(project.id, (draft) => {
-                draft.description = newDescription;
-              });
-            }
-          }}
-        >
-          {project.description || `Click to add description...`}
-        </p>
-
-        <div className="flex gap-2 mb-4">
-          <input
-            type="text"
-            value={newTodoText}
-            onChange={(e) => setNewTodoText(e.target.value)}
-            onKeyDown={(e) => e.key === `Enter` && addTodo()}
-            placeholder="Add a new todo..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <button
-            onClick={addTodo}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Add
-          </button>
-        </div>
-
-        <ul className="space-y-2">
-          {todos?.map((todo) => (
-            <li
-              key={todo.id}
-              className="flex items-center gap-2 p-3 bg-white border border-gray-200 rounded-md shadow-sm"
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2 group">
+            <CardTitle
+              className="cursor-pointer hover:text-primary transition-colors flex-1"
+              onClick={() => {
+                const newName = prompt(`Edit project name:`, project.name);
+                if (newName && newName !== project.name) {
+                  projectCollection.update(project.id, (draft) => {
+                    draft.name = newName;
+                  });
+                }
+              }}
             >
-              <input
-                type="checkbox"
-                checked={todo.completed}
-                onChange={() => toggleTodo(todo)}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span
-                className={`flex-1 ${
-                  todo.completed
-                    ? `line-through text-gray-500`
-                    : `text-gray-800`
-                }`}
-              >
-                {todo.text}
-              </span>
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                className="px-2 py-1 text-red-600 hover:bg-red-50 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
-
-        {(!todos || todos.length === 0) && (
-          <div className="text-center py-8">
-            <p className="text-gray-500">No todos yet. Add one above!</p>
+              {project.name}
+            </CardTitle>
+            <Edit2 className="h-4 w-4 opacity-0 group-hover:opacity-50 transition-opacity" />
           </div>
-        )}
+          <CardDescription
+            className="cursor-pointer hover:text-foreground transition-colors min-h-5"
+            onClick={() => {
+              const newDescription = prompt(
+                `Edit project description:`,
+                project.description || ``
+              );
+              if (newDescription !== null) {
+                projectCollection.update(project.id, (draft) => {
+                  draft.description = newDescription;
+                });
+              }
+            }}
+          >
+            {project.description || `Click to add description...`}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              value={newTodoText}
+              onChange={(e) => setNewTodoText(e.target.value)}
+              onKeyDown={(e) => e.key === `Enter` && addTodo()}
+              placeholder="Add a new todo..."
+              className="flex-1"
+            />
+            <Button onClick={addTodo}>Add</Button>
+          </div>
 
-        <hr className="my-8 border-gray-200" />
+          <div className="space-y-2">
+            {todos?.map((todo) => (
+              <div
+                key={todo.id}
+                className="flex items-center gap-3 p-3 rounded-lg border"
+              >
+                <Checkbox
+                  id={`todo-${todo.id}`}
+                  checked={todo.completed}
+                  onCheckedChange={() => toggleTodo(todo)}
+                />
 
-        <div>
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">
-            Project Members
-          </h3>
+                <Label
+                  className={`flex-1 font-normal ${
+                    todo.completed ? `line-through! text-muted-foreground!` : ``
+                  }`}
+                  htmlFor={`todo-${todo.id}`}
+                >
+                  {todo.text}
+                </Label>
+                <Button
+                  onClick={() => deleteTodo(todo.id)}
+                  variant="ghost"
+                  size="icon"
+                  className="text-destructive hover:text-destructive -my-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {(!todos || todos.length === 0) && (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">
+                No todos yet. Add one above!
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Members</CardTitle>
+          <CardDescription>
+            Manage who has access to this project
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
           <div className="space-y-2">
             {(session?.user.id === project.owner_id
               ? users
@@ -202,13 +229,13 @@ function ProjectPage() {
               return (
                 <div
                   key={user.id}
-                  className="flex items-center gap-3 p-2 bg-gray-50 rounded"
+                  className="flex items-center gap-3 p-3 rounded-lg border"
                 >
                   {canEditMembership && (
-                    <input
-                      type="checkbox"
+                    <Checkbox
+                      id={`user-${user.id}`}
                       checked={isInProject}
-                      onChange={() => {
+                      onCheckedChange={() => {
                         if (isInProject && !isOwner) {
                           projectCollection.update(project.id, (draft) => {
                             draft.shared_user_ids =
@@ -223,21 +250,22 @@ function ProjectPage() {
                         }
                       }}
                       disabled={isOwner}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
                   )}
-                  <span className="flex-1 text-gray-800">{user.name}</span>
-                  {isOwner && (
-                    <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded">
-                      Owner
-                    </span>
-                  )}
+
+                  <Label
+                    className="flex flex-1 font-normal"
+                    htmlFor={`user-${user.id}`}
+                  >
+                    <span className="flex-1">{user.name}</span>{" "}
+                    {isOwner && <Badge>Owner</Badge>}
+                  </Label>
                 </div>
               );
             })}
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

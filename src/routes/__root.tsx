@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type * as React from "react";
+import { useEffect } from "react";
 
 import "../styles.css";
 
@@ -34,6 +35,26 @@ export const Route = createRootRoute({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    // Initialize theme from localStorage on mount
+    const theme = localStorage.getItem("theme") || "system";
+    const root = document.documentElement;
+
+    // Remove existing theme classes
+    root.classList.remove("light", "dark");
+
+    // Determine effective theme
+    let effectiveTheme = theme;
+    if (theme === "system") {
+      effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    }
+
+    // Apply theme
+    root.classList.add(effectiveTheme);
+  }, []);
+
   return (
     <html lang="en">
       <head>
