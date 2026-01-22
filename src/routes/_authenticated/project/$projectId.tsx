@@ -110,7 +110,7 @@ function ProjectPage() {
     return (
       <div className="flex items-center justify-center h-full p-6">
         <Card>
-          <CardContent className="pt-6">
+          <CardContent>
             <p className="text-muted-foreground">Project not found</p>
           </CardContent>
         </Card>
