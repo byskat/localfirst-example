@@ -2,8 +2,18 @@ import { eq, useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute } from "@tanstack/react-router";
 import { Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Combobox,
+  ComboboxChip,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  useComboboxAnchor,
+} from "@/components/ui/combobox";
 import {
   Card,
   CardContent,
@@ -12,6 +22,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { Todo } from "@/db/schema";
@@ -39,6 +57,11 @@ function ProjectPage() {
   const { projectId } = Route.useParams();
   const { data: session } = authClient.useSession();
   const [newTodoText, setNewTodoText] = useState(``);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editName, setEditName] = useState(``);
+  const [editDescription, setEditDescription] = useState(``);
+  const [editSharedUserIds, setEditSharedUserIds] = useState<string[]>([]);
+  const comboboxAnchor = useComboboxAnchor();
 
   const { data: todos } = useLiveQuery(
     (q) =>
@@ -54,21 +77,6 @@ function ProjectPage() {
   const { data: users } = useLiveQuery((q) =>
     q.from({ users: usersCollection })
   );
-
-  const { data: usersInProjects } = useLiveQuery(
-    (q) =>
-      q
-        .from({ projects: projectCollection })
-        .where(({ projects }) =>
-          eq(projects.id, Number.parseInt(projectId, 10))
-        )
-        .fn.select(({ projects }) => ({
-          users: projects.shared_user_ids.concat(projects.owner_id),
-          owner: projects.owner_id,
-        })),
-    [projectId]
-  );
-  const usersInProject = usersInProjects?.[0];
 
   const { data: projects } = useLiveQuery(
     (q) =>
@@ -122,38 +130,26 @@ function ProjectPage() {
     <div className="p-6 max-w-4xl mx-auto space-y-6">
       <Card>
         <CardHeader>
-          <div className="flex items-center gap-2 group">
-            <CardTitle
-              className="cursor-pointer hover:text-primary transition-colors flex-1"
+          <div className="flex items-start gap-2">
+            <div className="flex-1">
+              <CardTitle>{project.name}</CardTitle>
+              <CardDescription className="min-h-5">
+                {project.description || `No description`}
+              </CardDescription>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => {
-                const newName = prompt(`Edit project name:`, project.name);
-                if (newName && newName !== project.name) {
-                  projectCollection.update(project.id, (draft) => {
-                    draft.name = newName;
-                  });
-                }
+                setEditName(project.name);
+                setEditDescription(project.description || ``);
+                setEditSharedUserIds(project.shared_user_ids);
+                setShowEditDialog(true);
               }}
             >
-              {project.name}
-            </CardTitle>
-            <Edit2 className="h-4 w-4 opacity-0 group-hover:opacity-50 transition-opacity" />
+              <Edit2 className="h-4 w-4" />
+            </Button>
           </div>
-          <CardDescription
-            className="cursor-pointer hover:text-foreground transition-colors min-h-5"
-            onClick={() => {
-              const newDescription = prompt(
-                `Edit project description:`,
-                project.description || ``
-              );
-              if (newDescription !== null) {
-                projectCollection.update(project.id, (draft) => {
-                  draft.description = newDescription;
-                });
-              }
-            }}
-          >
-            {project.description || `Click to add description...`}
-          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -210,62 +206,138 @@ function ProjectPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Project Members</CardTitle>
-          <CardDescription>
-            Manage who has access to this project
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {(session?.user.id === project.owner_id
-              ? users
-              : users?.filter((user) => usersInProject?.users.includes(user.id))
-            )?.map((user) => {
-              const isInProject = usersInProject?.users.includes(user.id);
-              const isOwner = user.id === usersInProject?.owner;
-              const canEditMembership = session?.user.id === project.owner_id;
-              return (
-                <div
-                  key={user.id}
-                  className="flex items-center gap-3 p-3 rounded-lg border"
-                >
-                  {canEditMembership && (
-                    <Checkbox
-                      id={`user-${user.id}`}
-                      checked={isInProject}
-                      onCheckedChange={() => {
-                        if (isInProject && !isOwner) {
-                          projectCollection.update(project.id, (draft) => {
-                            draft.shared_user_ids =
-                              draft.shared_user_ids.filter(
-                                (id) => id !== user.id
-                              );
-                          });
-                        } else if (!isInProject) {
-                          projectCollection.update(project.id, (draft) => {
-                            draft.shared_user_ids.push(user.id);
-                          });
-                        }
-                      }}
-                      disabled={isOwner}
-                    />
-                  )}
-
-                  <Label
-                    className="flex flex-1 font-normal"
-                    htmlFor={`user-${user.id}`}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+            <DialogDescription>
+              Update the project name and description.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="project-name">Project Name</Label>
+              <Input
+                id="project-name"
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="Project name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="project-description">Description</Label>
+              <Input
+                id="project-description"
+                type="text"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="Project description"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Project Members</Label>
+              {session?.user.id === project.owner_id ? (
+                <div className="space-y-2">
+                  {/* Owner display */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Owner:
+                    </span>
+                    <span className="bg-muted text-foreground flex h-[calc(--spacing(5.25))] w-fit items-center justify-center gap-1 rounded-sm px-1.5 text-xs font-medium whitespace-nowrap">
+                      {users?.find((u) => u.id === project.owner_id)?.name}
+                    </span>
+                  </div>
+                  {/* Member selection combobox */}
+                  <Combobox
+                    value={editSharedUserIds}
+                    // biome-ignore lint/suspicious/noExplicitAny: Base UI types need fixing
+                    onValueChange={(value: any) => {
+                      if (Array.isArray(value)) {
+                        setEditSharedUserIds(value);
+                      }
+                    }}
+                    multiple
                   >
-                    <span className="flex-1">{user.name}</span>{" "}
-                    {isOwner && <Badge>Owner</Badge>}
-                  </Label>
+                    <ComboboxChips ref={comboboxAnchor}>
+                      {/* Selected member chips */}
+                      {editSharedUserIds.map((userId) => {
+                        const user = users?.find((u) => u.id === userId);
+                        if (!user) return null;
+                        return (
+                          <ComboboxChip key={userId}>{user.name}</ComboboxChip>
+                        );
+                      })}
+                      <ComboboxChipsInput placeholder="Add members..." />
+                    </ComboboxChips>
+                    <ComboboxContent anchor={comboboxAnchor}>
+                      <ComboboxList>
+                        {users?.filter(
+                          (u) =>
+                            u.id !== project.owner_id &&
+                            !editSharedUserIds.includes(u.id)
+                        ).length === 0 ? (
+                          <ComboboxEmpty>No users found</ComboboxEmpty>
+                        ) : (
+                          users
+                            ?.filter(
+                              (u) =>
+                                u.id !== project.owner_id &&
+                                !editSharedUserIds.includes(u.id)
+                            )
+                            .map((user) => (
+                              <ComboboxItem key={user.id} value={user.id}>
+                                {user.name}
+                              </ComboboxItem>
+                            ))
+                        )}
+                      </ComboboxList>
+                    </ComboboxContent>
+                  </Combobox>
                 </div>
-              );
-            })}
+              ) : (
+                <div className="flex flex-wrap gap-2 min-h-9 p-2 border rounded-md">
+                  {/* Owner badge */}
+                  <span className="bg-muted text-foreground flex h-[calc(--spacing(5.25))] w-fit items-center justify-center gap-1 rounded-sm px-1.5 text-xs font-medium whitespace-nowrap">
+                    {users?.find((u) => u.id === project.owner_id)?.name}
+                    <span className="text-xs">(Owner)</span>
+                  </span>
+                  {/* Shared users */}
+                  {editSharedUserIds.map((userId) => {
+                    const user = users?.find((u) => u.id === userId);
+                    if (!user) return null;
+                    return (
+                      <span
+                        key={userId}
+                        className="bg-muted text-foreground flex h-[calc(--spacing(5.25))] w-fit items-center justify-center gap-1 rounded-sm px-1.5 text-xs font-medium whitespace-nowrap"
+                      >
+                        {user.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                projectCollection.update(project.id, (draft) => {
+                  draft.name = editName;
+                  draft.description = editDescription;
+                  draft.shared_user_ids = editSharedUserIds;
+                });
+                setShowEditDialog(false);
+              }}
+            >
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
