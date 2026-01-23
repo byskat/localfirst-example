@@ -1,5 +1,5 @@
 import { eq, useLiveQuery } from "@tanstack/react-db";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -54,6 +54,7 @@ export const Route = createFileRoute(`/_authenticated/project/$projectId`)({
 
 function ProjectPage() {
   const { projectId } = Route.useParams();
+  const navigate = useNavigate();
   const { data: session } = authClient.useSession();
   const [newTodoText, setNewTodoText] = useState(``);
   const [showEditSheet, setShowEditSheet] = useState(false);
@@ -217,7 +218,7 @@ function ProjectPage() {
                 type="text"
                 value={editingName ?? project.name}
                 onChange={(e) => setEditingName(e.target.value)}
-                onBlur={(e) => {
+                onBlur={() => {
                   if (editingName !== null && editingName !== project.name) {
                     projectCollection.update(project.id, (draft) => {
                       draft.name = editingName;
@@ -235,7 +236,7 @@ function ProjectPage() {
                 type="text"
                 value={editingDescription ?? project.description ?? ``}
                 onChange={(e) => setEditingDescription(e.target.value)}
-                onBlur={(e) => {
+                onBlur={() => {
                   if (
                     editingDescription !== null &&
                     editingDescription !== (project.description || ``)
@@ -334,6 +335,37 @@ function ProjectPage() {
                 </div>
               )}
             </div>
+            {/* Delete section */}
+            {session?.user.id === project.owner_id && (
+              <div className="pt-6 border-t">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-destructive">
+                    Danger Zone
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Once you delete a project, there is no going back.
+                  </p>
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => {
+                      if (
+                        globalThis.confirm(
+                          `Are you sure you want to delete "${project.name}"? This action cannot be undone.`
+                        )
+                      ) {
+                        projectCollection.delete(project.id);
+                        setShowEditSheet(false);
+                        navigate({ to: "/" });
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Project
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>
