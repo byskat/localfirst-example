@@ -65,6 +65,7 @@ import {
 import { useTheme } from "@/hooks/use-theme";
 import { authClient, authStateCollection } from "@/lib/auth-client";
 import { projectCollection } from "@/lib/collections";
+import { trpc } from "@/lib/trpc-client";
 
 export const Route = createFileRoute(`/_authenticated`)({
   ssr: false, // Disable SSR - run beforeLoad only on client
@@ -150,18 +151,21 @@ function AuthenticatedLayout() {
     navigate({ to: `/login` });
   };
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (newProjectName.trim() && session) {
-      projectCollection.insert({
-        id: Math.floor(Math.random() * 100000),
+      const result = await trpc.projects.create.mutate({
         name: newProjectName.trim(),
         description: ``,
         owner_id: session.user.id,
         shared_user_ids: [],
-        created_at: new Date(),
       });
       setNewProjectName(``);
       setShowNewProjectForm(false);
+
+      navigate({
+        to: `/project/$projectId`,
+        params: { projectId: result.item.id.toString() },
+      });
     }
   };
 

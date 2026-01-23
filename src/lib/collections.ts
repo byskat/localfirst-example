@@ -54,7 +54,7 @@ export const projectCollection = createCollection(
         shared_user_ids: newProject.shared_user_ids,
       });
 
-      return { txid: result.txid };
+      return { txid: result.txid, item: result.item };
     },
     onUpdate: async ({ transaction }) => {
       const { modified: updatedProject } = transaction.mutations[0];
