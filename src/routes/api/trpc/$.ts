@@ -3,14 +3,18 @@ import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { db } from "@/db/connection";
 import { auth } from "@/lib/auth";
 import { router } from "@/lib/trpc";
+import { dashboardsRouter } from "@/lib/trpc/dashboards";
 import { projectsRouter } from "@/lib/trpc/projects";
 import { todosRouter } from "@/lib/trpc/todos";
 import { usersRouter } from "@/lib/trpc/users";
+import { widgetsRouter } from "@/lib/trpc/widgets";
 
 export const appRouter = router({
   projects: projectsRouter,
   todos: todosRouter,
   users: usersRouter,
+  dashboards: dashboardsRouter,
+  widgets: widgetsRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -3,12 +3,14 @@ import {
   createFileRoute,
   Link,
   Outlet,
+  useLocation,
   useNavigate,
   useParams,
 } from "@tanstack/react-router";
 import {
   Atom,
   ChevronRight,
+  LayoutDashboard,
   ListTodo,
   LogOut,
   Monitor,
@@ -64,7 +66,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useTheme } from "@/hooks/use-theme";
 import { authClient, authStateCollection } from "@/lib/auth-client";
-import { projectCollection } from "@/lib/collections";
+import { dashboardsCollection, projectCollection } from "@/lib/collections";
 import { trpc } from "@/lib/trpc-client";
 
 export const Route = createFileRoute(`/_authenticated`)({
@@ -120,13 +122,21 @@ export const Route = createFileRoute(`/_authenticated`)({
 function AuthenticatedLayout() {
   const { data: session, isPending } = authClient.useSession();
   const navigate = useNavigate();
+  const location = useLocation();
   const params = useParams({ strict: false });
   const activeProjectId = params.projectId;
+  const activeDashboardId = params.dashboardId;
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
   const [newProjectName, setNewProjectName] = useState(``);
+  const [showNewDashboardForm, setShowNewDashboardForm] = useState(false);
+  const [newDashboardName, setNewDashboardName] = useState(``);
 
   const { data: projects, isLoading } = useLiveQuery((q) =>
     q.from({ projectCollection })
+  );
+
+  const { data: dashboards } = useLiveQuery((q) =>
+    q.from({ dashboardsCollection })
   );
 
   // Create an initial default project if the user doesn't yet have any.
@@ -169,6 +179,25 @@ function AuthenticatedLayout() {
     }
   };
 
+  const handleCreateDashboard = async () => {
+    if (newDashboardName.trim() && session) {
+      const result = await trpc.dashboards.create.mutate({
+        name: newDashboardName.trim(),
+        description: ``,
+        owner_id: session.user.id,
+        shared_user_ids: [],
+        editor_ids: [],
+      });
+      setNewDashboardName(``);
+      setShowNewDashboardForm(false);
+
+      navigate({
+        to: `/dashboard/$dashboardId`,
+        params: { dashboardId: result.item.id.toString() },
+      });
+    }
+  };
+
   if (isPending) {
     return null;
   }
@@ -182,13 +211,21 @@ function AuthenticatedLayout() {
       <AuthenticatedSidebar
         session={session}
         projects={projects}
+        dashboards={dashboards}
         activeProjectId={activeProjectId}
+        activeDashboardId={activeDashboardId}
+        location={location}
         handleLogout={handleLogout}
         showNewProjectForm={showNewProjectForm}
         setShowNewProjectForm={setShowNewProjectForm}
         newProjectName={newProjectName}
         setNewProjectName={setNewProjectName}
         handleCreateProject={handleCreateProject}
+        showNewDashboardForm={showNewDashboardForm}
+        setShowNewDashboardForm={setShowNewDashboardForm}
+        newDashboardName={newDashboardName}
+        setNewDashboardName={setNewDashboardName}
+        handleCreateDashboard={handleCreateDashboard}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
@@ -198,10 +235,47 @@ function AuthenticatedLayout() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="/">Projects</BreadcrumbLink>
+                  <BreadcrumbLink render={<Link to="/" />}>Home</BreadcrumbLink>
                 </BreadcrumbItem>
-                {activeProjectId && (
+                {location.pathname === "/dashboards" ? (
                   <>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>Dashboards</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                ) : location.pathname.startsWith("/dashboard/") ? (
+                  <>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink render={<Link to="/dashboards" />}>
+                        Dashboards
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>
+                        {dashboards?.find(
+                          (d) => d.id.toString() === activeDashboardId
+                        )?.name || "Dashboard"}
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                ) : location.pathname === "/" ? (
+                  <>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage>Projects</BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </>
+                ) : location.pathname.startsWith("/project/") ? (
+                  <>
+                    <BreadcrumbSeparator className="hidden md:block" />
+                    <BreadcrumbItem>
+                      <BreadcrumbLink render={<Link to="/" />}>
+                        Projects
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
                     <BreadcrumbSeparator className="hidden md:block" />
                     <BreadcrumbItem>
                       <BreadcrumbPage>
@@ -211,7 +285,7 @@ function AuthenticatedLayout() {
                       </BreadcrumbPage>
                     </BreadcrumbItem>
                   </>
-                )}
+                ) : null}
               </BreadcrumbList>
             </Breadcrumb>
           </div>
@@ -230,13 +304,21 @@ function AuthenticatedLayout() {
 function AuthenticatedSidebar({
   session,
   projects,
+  dashboards,
   activeProjectId,
+  activeDashboardId,
+  location,
   handleLogout,
   showNewProjectForm,
   setShowNewProjectForm,
   newProjectName,
   setNewProjectName,
   handleCreateProject,
+  showNewDashboardForm,
+  setShowNewDashboardForm,
+  newDashboardName,
+  setNewDashboardName,
+  handleCreateDashboard,
 }: {
   session: {
     user: {
@@ -248,13 +330,26 @@ function AuthenticatedSidebar({
     id: number;
     name: string;
   }>;
+  dashboards:
+    | Array<{
+        id: number;
+        name: string;
+      }>
+    | undefined;
   activeProjectId: string | undefined;
+  activeDashboardId: string | undefined;
+  location: { pathname: string };
   handleLogout: () => void;
   showNewProjectForm: boolean;
   setShowNewProjectForm: (show: boolean) => void;
   newProjectName: string;
   setNewProjectName: (name: string) => void;
   handleCreateProject: () => void;
+  showNewDashboardForm: boolean;
+  setShowNewDashboardForm: (show: boolean) => void;
+  newDashboardName: string;
+  setNewDashboardName: (name: string) => void;
+  handleCreateDashboard: () => void;
 }) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
@@ -309,10 +404,52 @@ function AuthenticatedSidebar({
                                 />
                               }
                               isActive={
+                                location.pathname.startsWith("/project/") &&
                                 activeProjectId === project.id.toString()
                               }
                             >
                               <span className="truncate">{project.name}</span>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+                <Collapsible defaultOpen className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger
+                      render={<SidebarMenuButton tooltip="Dashboards" />}
+                    >
+                      <LayoutDashboard />
+                      <span>Dashboards</span>
+                      <ChevronRight className="ml-auto transition-transform group-data-open/collapsible:rotate-90" />
+                    </CollapsibleTrigger>
+                    <SidebarMenuAction
+                      onClick={() => setShowNewDashboardForm(true)}
+                    >
+                      <Plus />
+                      <span className="sr-only">Add Dashboard</span>
+                    </SidebarMenuAction>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {dashboards?.map((dashboard) => (
+                          <SidebarMenuSubItem key={dashboard.id}>
+                            <SidebarMenuSubButton
+                              render={
+                                <Link
+                                  to="/dashboard/$dashboardId"
+                                  params={{
+                                    dashboardId: dashboard.id.toString(),
+                                  }}
+                                />
+                              }
+                              isActive={
+                                location.pathname.startsWith("/dashboard/") &&
+                                activeDashboardId === dashboard.id.toString()
+                              }
+                            >
+                              <span className="truncate">{dashboard.name}</span>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
@@ -383,6 +520,45 @@ function AuthenticatedSidebar({
               Cancel
             </Button>
             <Button onClick={handleCreateProject}>Create</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showNewDashboardForm}
+        onOpenChange={setShowNewDashboardForm}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Dashboard</DialogTitle>
+            <DialogDescription>
+              Add a new dashboard to visualize your data.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                value={newDashboardName}
+                onChange={(e) => setNewDashboardName(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleCreateDashboard();
+                  }
+                }}
+                placeholder="Dashboard name"
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowNewDashboardForm(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreateDashboard}>Create</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

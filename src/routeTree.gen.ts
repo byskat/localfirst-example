@@ -15,9 +15,13 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as ApiUsersRouteImport } from './routes/api/users'
 import { Route as ApiTodosRouteImport } from './routes/api/todos'
 import { Route as ApiProjectsRouteImport } from './routes/api/projects'
+import { Route as ApiDashboardsRouteImport } from './routes/api/dashboards'
+import { Route as ApiDashboardWidgetsRouteImport } from './routes/api/dashboard-widgets'
+import { Route as AuthenticatedDashboardsIndexRouteImport } from './routes/_authenticated/dashboards/index'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api/trpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
+import { Route as AuthenticatedDashboardDashboardIdRouteImport } from './routes/_authenticated/dashboard/$dashboardId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -48,6 +52,22 @@ const ApiProjectsRoute = ApiProjectsRouteImport.update({
   path: '/api/projects',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDashboardsRoute = ApiDashboardsRouteImport.update({
+  id: '/api/dashboards',
+  path: '/api/dashboards',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiDashboardWidgetsRoute = ApiDashboardWidgetsRouteImport.update({
+  id: '/api/dashboard-widgets',
+  path: '/api/dashboard-widgets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardsIndexRoute =
+  AuthenticatedDashboardsIndexRouteImport.update({
+    id: '/dashboards/',
+    path: '/dashboards/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -64,76 +84,108 @@ const AuthenticatedProjectProjectIdRoute =
     path: '/project/$projectId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDashboardDashboardIdRoute =
+  AuthenticatedDashboardDashboardIdRouteImport.update({
+    id: '/dashboard/$dashboardId',
+    path: '/dashboard/$dashboardId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/api/dashboard-widgets': typeof ApiDashboardWidgetsRoute
+  '/api/dashboards': typeof ApiDashboardsRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
+  '/dashboard/$dashboardId': typeof AuthenticatedDashboardDashboardIdRoute
   '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/dashboards/': typeof AuthenticatedDashboardsIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/api/dashboard-widgets': typeof ApiDashboardWidgetsRoute
+  '/api/dashboards': typeof ApiDashboardsRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
   '/': typeof AuthenticatedIndexRoute
+  '/dashboard/$dashboardId': typeof AuthenticatedDashboardDashboardIdRoute
   '/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/dashboards': typeof AuthenticatedDashboardsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/api/dashboard-widgets': typeof ApiDashboardWidgetsRoute
+  '/api/dashboards': typeof ApiDashboardsRoute
   '/api/projects': typeof ApiProjectsRoute
   '/api/todos': typeof ApiTodosRoute
   '/api/users': typeof ApiUsersRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/dashboard/$dashboardId': typeof AuthenticatedDashboardDashboardIdRoute
   '/_authenticated/project/$projectId': typeof AuthenticatedProjectProjectIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/_authenticated/dashboards/': typeof AuthenticatedDashboardsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
+    | '/api/dashboard-widgets'
+    | '/api/dashboards'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
+    | '/dashboard/$dashboardId'
     | '/project/$projectId'
     | '/api/auth/$'
     | '/api/trpc/$'
+    | '/dashboards/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/api/dashboard-widgets'
+    | '/api/dashboards'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
     | '/'
+    | '/dashboard/$dashboardId'
     | '/project/$projectId'
     | '/api/auth/$'
     | '/api/trpc/$'
+    | '/dashboards'
   id:
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/api/dashboard-widgets'
+    | '/api/dashboards'
     | '/api/projects'
     | '/api/todos'
     | '/api/users'
     | '/_authenticated/'
+    | '/_authenticated/dashboard/$dashboardId'
     | '/_authenticated/project/$projectId'
     | '/api/auth/$'
     | '/api/trpc/$'
+    | '/_authenticated/dashboards/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  ApiDashboardWidgetsRoute: typeof ApiDashboardWidgetsRoute
+  ApiDashboardsRoute: typeof ApiDashboardsRoute
   ApiProjectsRoute: typeof ApiProjectsRoute
   ApiTodosRoute: typeof ApiTodosRoute
   ApiUsersRoute: typeof ApiUsersRoute
@@ -185,6 +237,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/dashboards': {
+      id: '/api/dashboards'
+      path: '/api/dashboards'
+      fullPath: '/api/dashboards'
+      preLoaderRoute: typeof ApiDashboardsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/dashboard-widgets': {
+      id: '/api/dashboard-widgets'
+      path: '/api/dashboard-widgets'
+      fullPath: '/api/dashboard-widgets'
+      preLoaderRoute: typeof ApiDashboardWidgetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboards/': {
+      id: '/_authenticated/dashboards/'
+      path: '/dashboards'
+      fullPath: '/dashboards/'
+      preLoaderRoute: typeof AuthenticatedDashboardsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -206,17 +279,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProjectProjectIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/dashboard/$dashboardId': {
+      id: '/_authenticated/dashboard/$dashboardId'
+      path: '/dashboard/$dashboardId'
+      fullPath: '/dashboard/$dashboardId'
+      preLoaderRoute: typeof AuthenticatedDashboardDashboardIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedDashboardDashboardIdRoute: typeof AuthenticatedDashboardDashboardIdRoute
   AuthenticatedProjectProjectIdRoute: typeof AuthenticatedProjectProjectIdRoute
+  AuthenticatedDashboardsIndexRoute: typeof AuthenticatedDashboardsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedDashboardDashboardIdRoute:
+    AuthenticatedDashboardDashboardIdRoute,
   AuthenticatedProjectProjectIdRoute: AuthenticatedProjectProjectIdRoute,
+  AuthenticatedDashboardsIndexRoute: AuthenticatedDashboardsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -226,6 +311,8 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  ApiDashboardWidgetsRoute: ApiDashboardWidgetsRoute,
+  ApiDashboardsRoute: ApiDashboardsRoute,
   ApiProjectsRoute: ApiProjectsRoute,
   ApiTodosRoute: ApiTodosRoute,
   ApiUsersRoute: ApiUsersRoute,
