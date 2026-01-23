@@ -302,15 +302,17 @@ function DashboardDetail() {
             resizeConfig={{
               enabled: canEdit,
               handles: ["se"],
-              handleComponent: (_axis, ref) => (
-                <Button
-                  ref={ref as React.Ref<HTMLButtonElement>}
-                  variant="ghost"
-                  className="absolute bottom-px right-px w-5 h-5 p-0 rounded-full cursor-se-resize flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
-                >
-                  <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
-                </Button>
-              ),
+              handleComponent: canEdit
+                ? (_axis, ref) => (
+                    <Button
+                      ref={ref as React.Ref<HTMLButtonElement>}
+                      variant="ghost"
+                      className="absolute bottom-px right-px w-5 h-5 p-0 rounded-full cursor-se-resize flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+                    >
+                      <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  )
+                : undefined,
             }}
           >
             {widgets?.map((widget) => (
