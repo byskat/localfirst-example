@@ -115,9 +115,18 @@ function DashboardDetail() {
       }
     };
 
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
+    if (!containerRef.current) return;
+
+    // Use ResizeObserver to detect size changes (including sidebar toggle)
+    const resizeObserver = new ResizeObserver(() => {
+      updateWidth();
+    });
+
+    resizeObserver.observe(containerRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
   }, []);
 
   if (!dashboard) {
