@@ -31,29 +31,27 @@ export function TableWidget({
   const data = tableData;
 
   return (
-    <div className="h-full flex flex-col overflow-auto">
-      <div className="flex-1 overflow-auto border rounded-md">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Value</TableHead>
-              <TableHead>Status</TableHead>
+    <div className="overflow-auto h-full border rounded-md">
+      <Table containerless>
+        <TableHeader>
+          <TableRow>
+            <TableHead stickyHeader>ID</TableHead>
+            <TableHead stickyHeader>Name</TableHead>
+            <TableHead stickyHeader>Value</TableHead>
+            <TableHead stickyHeader>Status</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell>{row.id}</TableCell>
+              <TableCell>{row.name}</TableCell>
+              <TableCell>{row.value}</TableCell>
+              <TableCell>{row.status}</TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((row) => (
-              <TableRow key={row.id}>
-                <TableCell>{row.id}</TableCell>
-                <TableCell>{row.name}</TableCell>
-                <TableCell>{row.value}</TableCell>
-                <TableCell>{row.status}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

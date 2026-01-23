@@ -314,10 +314,7 @@ function DashboardDetail() {
             }}
           >
             {widgets?.map((widget) => (
-              <div
-                key={widget.id.toString()}
-                //className="bg-card border rounded-lg"
-              >
+              <div key={widget.id.toString()}>
                 <WidgetCard
                   title={widget.title}
                   canEdit={canEdit}
