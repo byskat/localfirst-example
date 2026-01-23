@@ -1,14 +1,24 @@
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Pencil, Plus, ArrowDownRight, Trash2 } from "lucide-react";
+import {
+  Pencil,
+  Plus,
+  Trash2,
+  Monitor,
+  Tablet,
+  Smartphone,
+  ArrowDownRight,
+  Layout as LayoutIcon,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import GridLayout from "react-grid-layout";
-import type { Layout } from "react-grid-layout";
+import { Responsive as ResponsiveGridLayout } from "react-grid-layout";
+import type { Layout, LayoutItem } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -28,6 +38,12 @@ import {
 } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ChartWidget } from "@/components/dashboard/chart-widget";
 import { TableWidget } from "@/components/dashboard/table-widget";
 import { WidgetCard } from "@/components/dashboard/widget-card";
@@ -86,6 +102,9 @@ function DashboardDetail() {
   const [widgetTitle, setWidgetTitle] = useState("");
   const [widgetType, setWidgetType] = useState<"chart" | "table">("chart");
   const [containerWidth, setContainerWidth] = useState(1200);
+  const [previewBreakpoint, setPreviewBreakpoint] = useState<
+    "default" | "mobile" | "tablet" | "desktop"
+  >("default");
   const containerRef = useRef<HTMLDivElement>(null);
   const comboboxAnchor = useComboboxAnchor();
 
@@ -124,30 +143,78 @@ function DashboardDetail() {
   const usersMap = new Map(users?.map((u) => [u.id, u]) ?? []);
   const owner = usersMap.get(dashboard.owner_id);
 
-  const handleLayoutChange = (layout: Layout) => {
+  const handleLayoutChange = (
+    _currentLayout: Layout,
+    allLayouts: Partial<Record<string, Layout>>
+  ) => {
     if (!canEdit) return;
 
-    for (const item of layout) {
-      const widget = widgets?.find((w) => w.id.toString() === item.i);
-      if (widget) {
-        const newLayout = {
-          x: item.x,
-          y: item.y,
-          w: item.w,
-          h: item.h,
-        };
+    // Update all breakpoints for all widgets
+    for (const widget of widgets ?? []) {
+      const widgetId = widget.id.toString();
+      const newLayout = {
+        mobile: allLayouts.mobile?.find(
+          (item: LayoutItem) => item.i === widgetId
+        ),
+        tablet: allLayouts.tablet?.find(
+          (item: LayoutItem) => item.i === widgetId
+        ),
+        desktop: allLayouts.desktop?.find(
+          (item: LayoutItem) => item.i === widgetId
+        ),
+      };
 
-        // Only update if layout actually changed
-        if (
-          widget.layout.x !== newLayout.x ||
-          widget.layout.y !== newLayout.y ||
-          widget.layout.w !== newLayout.w ||
-          widget.layout.h !== newLayout.h
-        ) {
-          widgetsCollection.update(widget.id, (draft) => {
-            draft.layout = newLayout;
-          });
-        }
+      // Check if any layout changed
+      const hasChanges =
+        (newLayout.mobile &&
+          (widget.layout.mobile.x !== newLayout.mobile.x ||
+            widget.layout.mobile.y !== newLayout.mobile.y ||
+            widget.layout.mobile.w !== newLayout.mobile.w ||
+            widget.layout.mobile.h !== newLayout.mobile.h)) ||
+        (newLayout.tablet &&
+          (widget.layout.tablet.x !== newLayout.tablet.x ||
+            widget.layout.tablet.y !== newLayout.tablet.y ||
+            widget.layout.tablet.w !== newLayout.tablet.w ||
+            widget.layout.tablet.h !== newLayout.tablet.h)) ||
+        (newLayout.desktop &&
+          (widget.layout.desktop.x !== newLayout.desktop.x ||
+            widget.layout.desktop.y !== newLayout.desktop.y ||
+            widget.layout.desktop.w !== newLayout.desktop.w ||
+            widget.layout.desktop.h !== newLayout.desktop.h));
+
+      if (hasChanges) {
+        widgetsCollection.update(widget.id, (draft) => {
+          if (newLayout.mobile) {
+            draft.layout.mobile = {
+              x: newLayout.mobile.x,
+              y: newLayout.mobile.y,
+              w: newLayout.mobile.w,
+              h: newLayout.mobile.h,
+              minW: draft.layout.mobile.minW,
+              minH: draft.layout.mobile.minH,
+            };
+          }
+          if (newLayout.tablet) {
+            draft.layout.tablet = {
+              x: newLayout.tablet.x,
+              y: newLayout.tablet.y,
+              w: newLayout.tablet.w,
+              h: newLayout.tablet.h,
+              minW: draft.layout.tablet.minW,
+              minH: draft.layout.tablet.minH,
+            };
+          }
+          if (newLayout.desktop) {
+            draft.layout.desktop = {
+              x: newLayout.desktop.x,
+              y: newLayout.desktop.y,
+              w: newLayout.desktop.w,
+              h: newLayout.desktop.h,
+              minW: draft.layout.desktop.minW,
+              minH: draft.layout.desktop.minH,
+            };
+          }
+        });
       }
     }
   };
@@ -187,10 +254,10 @@ function DashboardDetail() {
   const handleAddWidget = () => {
     if (!widgetTitle.trim()) return;
 
-    // Calculate next available position
+    // Calculate next available position for desktop
     const maxY = Math.max(
       0,
-      ...(widgets?.map((w) => w.layout.y + w.layout.h) ?? [0])
+      ...(widgets?.map((w) => w.layout.desktop.y + w.layout.desktop.h) ?? [0])
     );
 
     // Use small negative temp ID that will be replaced by server
@@ -204,12 +271,30 @@ function DashboardDetail() {
       title: widgetTitle,
       config: {},
       layout: {
-        x: 0,
-        y: maxY,
-        w: 6,
-        h: 4,
-        minW: 2,
-        minH: 2,
+        mobile: {
+          x: 0,
+          y: maxY,
+          w: 12,
+          h: 4,
+          minW: 6,
+          minH: 2,
+        },
+        tablet: {
+          x: 0,
+          y: maxY,
+          w: 8,
+          h: 4,
+          minW: 4,
+          minH: 2,
+        },
+        desktop: {
+          x: 0,
+          y: maxY,
+          w: 6,
+          h: 4,
+          minW: 2,
+          minH: 2,
+        },
       },
       data_source: {},
       created_at: new Date(),
@@ -221,24 +306,60 @@ function DashboardDetail() {
     setShowWidgetSheet(false);
   };
 
-  const gridLayout: Layout =
-    widgets?.map((w) => ({
-      i: w.id.toString(),
-      x: w.layout.x,
-      y: w.layout.y,
-      w: w.layout.w,
-      h: w.layout.h,
-      minW: w.layout.minW,
-      maxW: w.layout.maxW,
-      minH: w.layout.minH,
-      maxH: w.layout.maxH,
-      static: !canEdit || w.layout.static,
-    })) ?? [];
+  const gridLayouts: Partial<Record<string, Layout>> = {
+    mobile:
+      widgets?.map((w) => ({
+        i: w.id.toString(),
+        x: w.layout.mobile.x,
+        y: w.layout.mobile.y,
+        w: w.layout.mobile.w,
+        h: w.layout.mobile.h,
+        minW: w.layout.mobile.minW,
+        maxW: w.layout.mobile.maxW,
+        minH: w.layout.mobile.minH,
+        maxH: w.layout.mobile.maxH,
+        static: !canEdit || w.layout.mobile.static,
+      })) ?? [],
+    tablet:
+      widgets?.map((w) => ({
+        i: w.id.toString(),
+        x: w.layout.tablet.x,
+        y: w.layout.tablet.y,
+        w: w.layout.tablet.w,
+        h: w.layout.tablet.h,
+        minW: w.layout.tablet.minW,
+        maxW: w.layout.tablet.maxW,
+        minH: w.layout.tablet.minH,
+        maxH: w.layout.tablet.maxH,
+        static: !canEdit || w.layout.tablet.static,
+      })) ?? [],
+    desktop:
+      widgets?.map((w) => ({
+        i: w.id.toString(),
+        x: w.layout.desktop.x,
+        y: w.layout.desktop.y,
+        w: w.layout.desktop.w,
+        h: w.layout.desktop.h,
+        minW: w.layout.desktop.minW,
+        maxW: w.layout.desktop.maxW,
+        minH: w.layout.desktop.minH,
+        maxH: w.layout.desktop.maxH,
+        static: !canEdit || w.layout.desktop.static,
+      })) ?? [],
+  };
+
+  // Breakpoint widths for preview
+  const breakpointWidths: Record<string, number> = {
+    default: containerWidth,
+    mobile: 480,
+    tablet: 1024,
+    desktop: 1536,
+  };
 
   return (
     <div className="p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex-1">
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap flex-col md:flex-row">
+        <div className="flex-1 min-w-0">
           <h1 className="text-3xl font-bold tracking-tight">
             {dashboard.name}
           </h1>
@@ -246,9 +367,81 @@ function DashboardDetail() {
             <p className="text-muted-foreground">{dashboard.description}</p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full justify-end flex-wrap md:w-auto">
           {canEdit && (
             <>
+              <div className="flex border rounded-md">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger
+                      onClick={() => setPreviewBreakpoint("default")}
+                      className={cn(
+                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
+                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-r-none [&_svg:not([class*='size-'])]:size-3.5",
+                        previewBreakpoint === "default"
+                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
+                      )}
+                    >
+                      <LayoutIcon className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      Default (responsive)
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger
+                      onClick={() => setPreviewBreakpoint("mobile")}
+                      className={cn(
+                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
+                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-none border-x [&_svg:not([class*='size-'])]:size-3.5",
+                        previewBreakpoint === "mobile"
+                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
+                      )}
+                    >
+                      <Smartphone className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      Mobile (480px)
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger
+                      onClick={() => setPreviewBreakpoint("tablet")}
+                      className={cn(
+                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
+                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-none border-x [&_svg:not([class*='size-'])]:size-3.5",
+                        previewBreakpoint === "tablet"
+                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
+                      )}
+                    >
+                      <Tablet className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      Tablet (1024px)
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger
+                      onClick={() => setPreviewBreakpoint("desktop")}
+                      className={cn(
+                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
+                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-l-none [&_svg:not([class*='size-'])]:size-3.5",
+                        previewBreakpoint === "desktop"
+                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
+                      )}
+                    >
+                      <Monitor className="h-4 w-4" />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom">
+                      Desktop (1536px)
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
               <Button
                 variant="outline"
                 size="sm"
@@ -288,67 +481,97 @@ function DashboardDetail() {
           </CardContent>
         </Card>
       ) : (
-        <div ref={containerRef} className="w-full">
-          <GridLayout
-            className="layout"
-            layout={gridLayout}
-            gridConfig={{ cols: 12, rowHeight: 60 }}
-            width={containerWidth}
-            onLayoutChange={handleLayoutChange}
-            dragConfig={{
-              enabled: canEdit,
-              handle: ".drag-handle",
-            }}
-            resizeConfig={{
-              enabled: canEdit,
-              handles: ["se"],
-              handleComponent: canEdit
-                ? (_axis, ref) => (
-                    <Button
-                      ref={ref as React.Ref<HTMLButtonElement>}
-                      variant="ghost"
-                      className="absolute bottom-px right-px w-5 h-5 p-0 rounded-full cursor-se-resize flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
-                    >
-                      <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  )
-                : undefined,
-            }}
+        <div className="-mx-6 px-6">
+          <div
+            ref={containerRef}
+            className={
+              previewBreakpoint !== "default"
+                ? "mx-auto border-2 border-dashed border-primary/30 rounded-lg p-4 bg-muted/20 overflow-x-auto"
+                : "overflow-x-hidden"
+            }
+            style={
+              previewBreakpoint !== "default"
+                ? { maxWidth: breakpointWidths[previewBreakpoint] }
+                : undefined
+            }
           >
-            {widgets?.map((widget) => (
-              <div key={widget.id.toString()}>
-                <WidgetCard
-                  title={widget.title}
-                  canEdit={canEdit}
-                  onDelete={() => {
-                    if (
-                      globalThis.confirm(`Delete widget "${widget.title}"?`)
-                    ) {
-                      widgetsCollection.delete(widget.id);
-                    }
-                  }}
-                >
-                  {widget.type === "chart" ? (
-                    <ChartWidget
+            <div
+              style={
+                previewBreakpoint !== "default"
+                  ? { width: breakpointWidths[previewBreakpoint] - 32 - 4 }
+                  : undefined
+              }
+            >
+              <ResponsiveGridLayout
+                className="layout"
+                layouts={gridLayouts}
+                breakpoints={{ desktop: 1280, tablet: 768, mobile: 0 }}
+                cols={{ desktop: 12, tablet: 8, mobile: 12 }}
+                rowHeight={60}
+                width={
+                  previewBreakpoint !== "default"
+                    ? breakpointWidths[previewBreakpoint] - 32 - 4
+                    : containerWidth
+                }
+                onLayoutChange={handleLayoutChange}
+                margin={[12, 12]}
+                containerPadding={[0, 0]}
+                dragConfig={{
+                  enabled: canEdit,
+                  handle: ".drag-handle",
+                }}
+                resizeConfig={{
+                  enabled: canEdit,
+                  handles: ["se"],
+                  handleComponent: canEdit
+                    ? (_axis, ref) => (
+                        <Button
+                          ref={ref as React.Ref<HTMLButtonElement>}
+                          variant="ghost"
+                          className="absolute bottom-px right-px w-5 h-5 p-0 rounded-full cursor-se-resize flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+                        >
+                          <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      )
+                    : undefined,
+                }}
+              >
+                {widgets?.map((widget) => (
+                  <div key={widget.id.toString()}>
+                    <WidgetCard
                       title={widget.title}
-                      config={widget.config}
-                      dataSource={widget.data_source}
-                    />
-                  ) : widget.type === "table" ? (
-                    <TableWidget
-                      title={widget.title}
-                      config={widget.config}
-                      dataSource={widget.data_source}
-                    />
-                  ) : (
-                    <div className="text-sm text-muted-foreground">
-                      Unknown widget type: {widget.type}
-                    </div>
-                  )}
-                </WidgetCard>
-              </div>
-            ))}
-          </GridLayout>
+                      canEdit={canEdit}
+                      onDelete={() => {
+                        if (
+                          globalThis.confirm(`Delete widget "${widget.title}"?`)
+                        ) {
+                          widgetsCollection.delete(widget.id);
+                        }
+                      }}
+                    >
+                      {widget.type === "chart" ? (
+                        <ChartWidget
+                          title={widget.title}
+                          config={widget.config}
+                          dataSource={widget.data_source}
+                        />
+                      ) : widget.type === "table" ? (
+                        <TableWidget
+                          title={widget.title}
+                          config={widget.config}
+                          dataSource={widget.data_source}
+                        />
+                      ) : (
+                        <div className="text-sm text-muted-foreground">
+                          Unknown widget type: {widget.type}
+                        </div>
+                      )}
+                    </WidgetCard>
+                  </div>
+                ))}
+              </ResponsiveGridLayout>
+            </div>
+          </div>
         </div>
       )}
 

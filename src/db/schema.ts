@@ -87,7 +87,7 @@ export const createDashboardSchema = createInsertSchema(dashboardsTable).omit({
 });
 export const updateDashboardSchema = createUpdateSchema(dashboardsTable);
 
-const widgetLayoutSchema = z.object({
+const widgetLayoutItemSchema = z.object({
   x: z.number(),
   y: z.number(),
   w: z.number(),
@@ -97,6 +97,12 @@ const widgetLayoutSchema = z.object({
   minH: z.number().optional(),
   maxH: z.number().optional(),
   static: z.boolean().optional(),
+});
+
+const widgetLayoutSchema = z.object({
+  mobile: widgetLayoutItemSchema,
+  tablet: widgetLayoutItemSchema,
+  desktop: widgetLayoutItemSchema,
 });
 
 export const selectWidgetSchema = createSelectSchema(dashboardWidgetsTable, {
