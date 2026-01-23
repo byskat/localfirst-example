@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import GridLayout from "react-grid-layout";
+import type { Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +27,9 @@ import {
   useComboboxAnchor,
 } from "@/components/ui/combobox";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { ChartWidget } from "@/components/dashboard/chart-widget";
+import { TableWidget } from "@/components/dashboard/table-widget";
 import { authClient } from "@/lib/auth-client";
 import {
   dashboardsCollection,
@@ -77,6 +81,9 @@ function DashboardDetail() {
   const [editingDescription, setEditingDescription] = useState<string | null>(
     null
   );
+  const [showWidgetSheet, setShowWidgetSheet] = useState(false);
+  const [widgetTitle, setWidgetTitle] = useState("");
+  const [widgetType, setWidgetType] = useState<"chart" | "table">("chart");
   const comboboxAnchor = useComboboxAnchor();
 
   if (!dashboard) {
@@ -102,7 +109,7 @@ function DashboardDetail() {
   const usersMap = new Map(users?.map((u) => [u.id, u]) ?? []);
   const owner = usersMap.get(dashboard.owner_id);
 
-  const handleLayoutChange = (layout: GridLayout.Layout[]) => {
+  const handleLayoutChange = (layout: Layout) => {
     if (!canEdit) return;
 
     for (const item of layout) {
@@ -162,7 +169,44 @@ function DashboardDetail() {
     setEditingDescription(null);
   };
 
-  const gridLayout: GridLayout.Layout[] =
+  const handleAddWidget = () => {
+    if (!widgetTitle.trim()) return;
+
+    // Calculate next available position
+    const maxY = Math.max(
+      0,
+      ...(widgets?.map((w) => w.layout.y + w.layout.h) ?? [0])
+    );
+
+    // Use small negative temp ID that will be replaced by server
+    // Random between -1000000 and -1 to avoid conflicts
+    const tempId = -Math.floor(Math.random() * 1000000) - 1;
+
+    widgetsCollection.insert({
+      id: tempId,
+      dashboard_id: Number.parseInt(dashboardId, 10),
+      type: widgetType,
+      title: widgetTitle,
+      config: {},
+      layout: {
+        x: 0,
+        y: maxY,
+        w: 6,
+        h: 4,
+        minW: 2,
+        minH: 2,
+      },
+      data_source: {},
+      created_at: new Date(),
+    });
+
+    // Reset form
+    setWidgetTitle("");
+    setWidgetType("chart");
+    setShowWidgetSheet(false);
+  };
+
+  const gridLayout: Layout =
     widgets?.map((w) => ({
       i: w.id.toString(),
       x: w.layout.x,
@@ -198,7 +242,11 @@ function DashboardDetail() {
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit
               </Button>
-              <Button variant="outline" size="sm">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowWidgetSheet(true)}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add Widget
               </Button>
@@ -217,7 +265,7 @@ function DashboardDetail() {
               Add your first widget to start visualizing data.
             </p>
             {canEdit && (
-              <Button>
+              <Button onClick={() => setShowWidgetSheet(true)}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Widget
               </Button>
@@ -228,6 +276,7 @@ function DashboardDetail() {
         <GridLayout
           className="layout"
           layout={gridLayout}
+          // @ts-expect-error - react-grid-layout types are incomplete
           cols={12}
           rowHeight={60}
           width={1200}
@@ -240,14 +289,48 @@ function DashboardDetail() {
               key={widget.id.toString()}
               className="bg-card border rounded-lg"
             >
-              <Card className="h-full">
-                <CardHeader>
+              <Card className="h-full flex flex-col">
+                <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-lg">{widget.title}</CardTitle>
+                  {canEdit && (
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={() => {
+                          if (
+                            globalThis.confirm(
+                              `Delete widget "${widget.title}"?`
+                            )
+                          ) {
+                            widgetsCollection.delete(widget.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </CardHeader>
-                <CardContent>
-                  <div className="text-sm text-muted-foreground">
-                    Widget type: {widget.type}
-                  </div>
+                <CardContent className="flex-1 overflow-hidden">
+                  {widget.type === "chart" ? (
+                    <ChartWidget
+                      title={widget.title}
+                      config={widget.config}
+                      dataSource={widget.data_source}
+                    />
+                  ) : widget.type === "table" ? (
+                    <TableWidget
+                      title={widget.title}
+                      config={widget.config}
+                      dataSource={widget.data_source}
+                    />
+                  ) : (
+                    <div className="text-sm text-muted-foreground">
+                      Unknown widget type: {widget.type}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -412,6 +495,64 @@ function DashboardDetail() {
                 </div>
               </div>
             )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={showWidgetSheet} onOpenChange={setShowWidgetSheet}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Add Widget</SheetTitle>
+          </SheetHeader>
+
+          <div className="flex flex-col gap-6 p-4">
+            <div className="space-y-2">
+              <Label htmlFor="widget-title">Title</Label>
+              <Input
+                id="widget-title"
+                value={widgetTitle}
+                onChange={(e) => setWidgetTitle(e.target.value)}
+                placeholder="Enter widget title"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Widget Type</Label>
+              <RadioGroup
+                value={widgetType}
+                onValueChange={(value: "chart" | "table") =>
+                  setWidgetType(value)
+                }
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="chart" id="widget-type-chart" />
+                  <Label
+                    htmlFor="widget-type-chart"
+                    className="cursor-pointer font-normal"
+                  >
+                    Chart
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="table" id="widget-type-table" />
+                  <Label
+                    htmlFor="widget-type-table"
+                    className="cursor-pointer font-normal"
+                  >
+                    Table
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <Button
+              onClick={handleAddWidget}
+              disabled={!widgetTitle.trim()}
+              className="w-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Widget
+            </Button>
           </div>
         </SheetContent>
       </Sheet>
