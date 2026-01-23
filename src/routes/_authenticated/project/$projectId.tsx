@@ -22,16 +22,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import type { Todo } from "@/db/schema";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -57,10 +56,11 @@ function ProjectPage() {
   const { projectId } = Route.useParams();
   const { data: session } = authClient.useSession();
   const [newTodoText, setNewTodoText] = useState(``);
-  const [showEditDialog, setShowEditDialog] = useState(false);
-  const [editName, setEditName] = useState(``);
-  const [editDescription, setEditDescription] = useState(``);
-  const [editSharedUserIds, setEditSharedUserIds] = useState<string[]>([]);
+  const [showEditSheet, setShowEditSheet] = useState(false);
+  const [editingName, setEditingName] = useState<string | null>(null);
+  const [editingDescription, setEditingDescription] = useState<string | null>(
+    null
+  );
   const comboboxAnchor = useComboboxAnchor();
 
   const { data: todos } = useLiveQuery(
@@ -140,12 +140,7 @@ function ProjectPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => {
-                setEditName(project.name);
-                setEditDescription(project.description || ``);
-                setEditSharedUserIds(project.shared_user_ids);
-                setShowEditDialog(true);
-              }}
+              onClick={() => setShowEditSheet(true)}
             >
               <Edit2 className="h-4 w-4" />
             </Button>
@@ -206,22 +201,30 @@ function ProjectPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-            <DialogDescription>
-              Update the project name and description.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
+      <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>
+        <SheetContent hideOverlay>
+          <SheetHeader>
+            <SheetTitle>Edit Project</SheetTitle>
+            <SheetDescription>
+              Changes are saved automatically.
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex flex-col gap-6 p-4">
             <div className="space-y-2">
               <Label htmlFor="project-name">Project Name</Label>
               <Input
                 id="project-name"
                 type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
+                value={editingName ?? project.name}
+                onChange={(e) => setEditingName(e.target.value)}
+                onBlur={(e) => {
+                  if (editingName !== null && editingName !== project.name) {
+                    projectCollection.update(project.id, (draft) => {
+                      draft.name = editingName;
+                    });
+                  }
+                  setEditingName(null);
+                }}
                 placeholder="Project name"
               />
             </div>
@@ -230,8 +233,19 @@ function ProjectPage() {
               <Input
                 id="project-description"
                 type="text"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
+                value={editingDescription ?? project.description ?? ``}
+                onChange={(e) => setEditingDescription(e.target.value)}
+                onBlur={(e) => {
+                  if (
+                    editingDescription !== null &&
+                    editingDescription !== (project.description || ``)
+                  ) {
+                    projectCollection.update(project.id, (draft) => {
+                      draft.description = editingDescription;
+                    });
+                  }
+                  setEditingDescription(null);
+                }}
                 placeholder="Project description"
               />
             </div>
@@ -250,18 +264,20 @@ function ProjectPage() {
                   </div>
                   {/* Member selection combobox */}
                   <Combobox
-                    value={editSharedUserIds}
+                    value={project.shared_user_ids}
                     // biome-ignore lint/suspicious/noExplicitAny: Base UI types need fixing
                     onValueChange={(value: any) => {
                       if (Array.isArray(value)) {
-                        setEditSharedUserIds(value);
+                        projectCollection.update(project.id, (draft) => {
+                          draft.shared_user_ids = value;
+                        });
                       }
                     }}
                     multiple
                   >
                     <ComboboxChips ref={comboboxAnchor}>
                       {/* Selected member chips */}
-                      {editSharedUserIds.map((userId) => {
+                      {project.shared_user_ids.map((userId) => {
                         const user = users?.find((u) => u.id === userId);
                         if (!user) return null;
                         return (
@@ -275,7 +291,7 @@ function ProjectPage() {
                         {users?.filter(
                           (u) =>
                             u.id !== project.owner_id &&
-                            !editSharedUserIds.includes(u.id)
+                            !project.shared_user_ids.includes(u.id)
                         ).length === 0 ? (
                           <ComboboxEmpty>No users found</ComboboxEmpty>
                         ) : (
@@ -283,7 +299,7 @@ function ProjectPage() {
                             ?.filter(
                               (u) =>
                                 u.id !== project.owner_id &&
-                                !editSharedUserIds.includes(u.id)
+                                !project.shared_user_ids.includes(u.id)
                             )
                             .map((user) => (
                               <ComboboxItem key={user.id} value={user.id}>
@@ -303,7 +319,7 @@ function ProjectPage() {
                     <span className="text-xs">(Owner)</span>
                   </span>
                   {/* Shared users */}
-                  {editSharedUserIds.map((userId) => {
+                  {project.shared_user_ids.map((userId) => {
                     const user = users?.find((u) => u.id === userId);
                     if (!user) return null;
                     return (
@@ -319,25 +335,8 @@ function ProjectPage() {
               )}
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                projectCollection.update(project.id, (draft) => {
-                  draft.name = editName;
-                  draft.description = editDescription;
-                  draft.shared_user_ids = editSharedUserIds;
-                });
-                setShowEditDialog(false);
-              }}
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
