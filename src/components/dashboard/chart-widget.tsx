@@ -39,24 +39,23 @@ export function ChartWidget({
   const data = chartData;
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="text-sm text-muted-foreground mb-2">
-        Sample Chart Data
+    <div className="w-full h-full relative">
+      <div className="absolute inset-0">
+        <ChartContainer config={chartConfig} className="w-full h-full">
+          <BarChart data={data}>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="month"
+              tickLine={false}
+              tickMargin={10}
+              axisLine={false}
+              tickFormatter={(value) => value.slice(0, 3)}
+            />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar dataKey="value" fill="var(--color-value)" radius={4} />
+          </BarChart>
+        </ChartContainer>
       </div>
-      <ChartContainer config={chartConfig} className="flex-1 min-h-0">
-        <BarChart data={data}>
-          <CartesianGrid vertical={false} />
-          <XAxis
-            dataKey="month"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            tickFormatter={(value) => value.slice(0, 3)}
-          />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar dataKey="value" fill="var(--color-value)" radius={4} />
-        </BarChart>
-      </ChartContainer>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Pencil, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Pencil, Plus, ArrowDownRight, Trash2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import GridLayout from "react-grid-layout";
 import type { Layout } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -30,6 +30,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ChartWidget } from "@/components/dashboard/chart-widget";
 import { TableWidget } from "@/components/dashboard/table-widget";
+import { WidgetCard } from "@/components/dashboard/widget-card";
 import { authClient } from "@/lib/auth-client";
 import {
   dashboardsCollection,
@@ -84,7 +85,21 @@ function DashboardDetail() {
   const [showWidgetSheet, setShowWidgetSheet] = useState(false);
   const [widgetTitle, setWidgetTitle] = useState("");
   const [widgetType, setWidgetType] = useState<"chart" | "table">("chart");
+  const [containerWidth, setContainerWidth] = useState(1200);
+  const containerRef = useRef<HTMLDivElement>(null);
   const comboboxAnchor = useComboboxAnchor();
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
 
   if (!dashboard) {
     return (
@@ -273,47 +288,47 @@ function DashboardDetail() {
           </CardContent>
         </Card>
       ) : (
-        <GridLayout
-          className="layout"
-          layout={gridLayout}
-          // @ts-expect-error - react-grid-layout types are incomplete
-          cols={12}
-          rowHeight={60}
-          width={1200}
-          onLayoutChange={handleLayoutChange}
-          isDraggable={canEdit}
-          isResizable={canEdit}
-        >
-          {widgets?.map((widget) => (
-            <div
-              key={widget.id.toString()}
-              className="bg-card border rounded-lg"
-            >
-              <Card className="h-full flex flex-col">
-                <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg">{widget.title}</CardTitle>
-                  {canEdit && (
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={() => {
-                          if (
-                            globalThis.confirm(
-                              `Delete widget "${widget.title}"?`
-                            )
-                          ) {
-                            widgetsCollection.delete(widget.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent className="flex-1 overflow-hidden">
+        <div ref={containerRef} className="w-full">
+          <GridLayout
+            className="layout"
+            layout={gridLayout}
+            gridConfig={{ cols: 12, rowHeight: 60 }}
+            width={containerWidth}
+            onLayoutChange={handleLayoutChange}
+            dragConfig={{
+              enabled: canEdit,
+              handle: ".drag-handle",
+            }}
+            resizeConfig={{
+              enabled: canEdit,
+              handles: ["se"],
+              handleComponent: (_axis, ref) => (
+                <Button
+                  ref={ref as React.Ref<HTMLButtonElement>}
+                  variant="ghost"
+                  className="absolute bottom-px right-px w-5 h-5 p-0 rounded-full cursor-se-resize flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+                >
+                  <ArrowDownRight className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              ),
+            }}
+          >
+            {widgets?.map((widget) => (
+              <div
+                key={widget.id.toString()}
+                //className="bg-card border rounded-lg"
+              >
+                <WidgetCard
+                  title={widget.title}
+                  canEdit={canEdit}
+                  onDelete={() => {
+                    if (
+                      globalThis.confirm(`Delete widget "${widget.title}"?`)
+                    ) {
+                      widgetsCollection.delete(widget.id);
+                    }
+                  }}
+                >
                   {widget.type === "chart" ? (
                     <ChartWidget
                       title={widget.title}
@@ -331,11 +346,11 @@ function DashboardDetail() {
                       Unknown widget type: {widget.type}
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            </div>
-          ))}
-        </GridLayout>
+                </WidgetCard>
+              </div>
+            ))}
+          </GridLayout>
+        </div>
       )}
 
       <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>

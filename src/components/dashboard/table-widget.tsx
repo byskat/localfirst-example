@@ -32,9 +32,6 @@ export function TableWidget({
 
   return (
     <div className="h-full flex flex-col overflow-auto">
-      <div className="text-sm text-muted-foreground mb-2">
-        Sample Table Data
-      </div>
       <div className="flex-1 overflow-auto border rounded-md">
         <Table>
           <TableHeader>
