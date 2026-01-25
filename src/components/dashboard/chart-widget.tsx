@@ -2,6 +2,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
   Line,
   LineChart,
   XAxis,
@@ -93,11 +94,13 @@ export function ChartWidget({
               />
               <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
               {series.map((s) => (
                 <Line
                   key={s.key}
                   type="monotone"
                   dataKey={s.key}
+                  name={s.label}
                   stroke={s.color ?? `var(--color-${s.key})`}
                   strokeWidth={s.strokeWidth ?? 2}
                   strokeDasharray={s.strokeDasharray}
@@ -119,10 +122,12 @@ export function ChartWidget({
               />
               <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
               {series.map((s) => (
                 <Bar
                   key={s.key}
                   dataKey={s.key}
+                  name={s.label}
                   fill={s.color ?? `var(--color-${s.key})`}
                   radius={4}
                 />
