@@ -97,7 +97,8 @@ export function AddWidgetSheet({ dashboardId }: Readonly<AddWidgetSheetProps>) {
       setWidgetData(JSON.stringify(DEFAULT_CHART_DATA, null, 2));
       setWidgetConfig(JSON.stringify(DEFAULT_CHART_CONFIG, null, 2));
       setOpen(false);
-    } catch (_error) {
+    } catch (error) {
+      console.error("Failed to parse JSON:", error);
       alert("Invalid JSON format. Please check your data and configuration.");
     }
   };

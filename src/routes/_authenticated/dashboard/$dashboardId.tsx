@@ -7,7 +7,6 @@ import type { Layout, LayoutItem } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import { AddWidgetSheet } from "@/components/dashboard/add-widget-sheet";
 import { BreakpointToggle } from "@/components/dashboard/breakpoint-toggle";
 import { EditDashboardSheet } from "@/components/dashboard/edit-dashboard-sheet";

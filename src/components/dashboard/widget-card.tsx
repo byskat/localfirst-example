@@ -29,11 +29,12 @@ export function WidgetCard({
           {canEdit && (
             <div className="flex items-center gap-2">
               <ButtonGroup>
-                {widget.type === "chart" ? (
-                  <EditChartWidgetSheet widget={widget} />
-                ) : widget.type === "table" ? (
-                  <EditTableWidgetSheet widget={widget} />
-                ) : null}
+              {widget.type === "chart" && (
+                <EditChartWidgetSheet widget={widget} />
+              )}
+              {widget.type === "table" && (
+                <EditTableWidgetSheet widget={widget} />
+              )}
                 <Button
                   variant="outline-destructive"
                   size="icon"
@@ -59,19 +60,21 @@ export function WidgetCard({
           )}
         </div>
         <div className="flex-1 px-4 relative min-h-0">
-          {widget.type === "chart" ? (
+          {widget.type === "chart" && (
             <ChartWidget
               title={widget.title}
               config={widget.config}
               dataSource={widget.data_source}
             />
-          ) : widget.type === "table" ? (
+          )}
+          {widget.type === "table" && (
             <TableWidget
               title={widget.title}
               config={widget.config}
               dataSource={widget.data_source}
             />
-          ) : (
+          )}
+          {widget.type !== "chart" && widget.type !== "table" && (
             <div className="text-sm text-muted-foreground">
               Unknown widget type: {widget.type}
             </div>
