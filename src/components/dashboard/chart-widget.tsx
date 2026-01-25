@@ -1,4 +1,12 @@
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Line,
+  LineChart,
+  XAxis,
+  YAxis,
+} from "recharts";
 import {
   type ChartConfig,
   ChartContainer,
@@ -6,8 +14,8 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-// Sample chart data - will be replaced with real data from data_source
-const chartData = [
+// Sample chart data - used as fallback
+const sampleChartData = [
   { month: "January", value: 186 },
   { month: "February", value: 305 },
   { month: "March", value: 237 },
@@ -16,12 +24,21 @@ const chartData = [
   { month: "June", value: 214 },
 ];
 
-const chartConfig = {
-  value: {
-    label: "Value",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig;
+interface ChartSeries {
+  key: string;
+  label: string;
+  color?: string;
+  type?: "bar" | "line";
+  strokeDasharray?: string;
+  strokeWidth?: number;
+}
+
+interface ChartWidgetConfig {
+  series?: ChartSeries[];
+  xAxisKey?: string;
+  chartType?: "bar" | "line" | "area";
+  showGrid?: boolean;
+}
 
 interface ChartWidgetProps {
   title: string;
@@ -31,29 +48,87 @@ interface ChartWidgetProps {
 
 export function ChartWidget({
   title: _title,
-  config: _config,
-  dataSource: _dataSource,
+  config,
+  dataSource,
 }: Readonly<ChartWidgetProps>) {
-  // Future: Use _config and _dataSource to fetch/filter real data
-  // For now, using sample data
-  const data = chartData;
+  // Parse config and data
+  const chartConfig = config as ChartWidgetConfig;
+  const data =
+    Array.isArray(dataSource) && dataSource.length > 0
+      ? dataSource
+      : sampleChartData;
+
+  const series = chartConfig.series ?? [
+    { key: "value", label: "Value", color: "hsl(var(--chart-1))" },
+  ];
+
+  const xAxisKey = chartConfig.xAxisKey ?? "month";
+  const chartType = chartConfig.chartType ?? "bar";
+  const showGrid = chartConfig.showGrid ?? true;
+
+  // Build recharts config from series
+  const rechartsConfig: ChartConfig = {};
+  for (const s of series) {
+    rechartsConfig[s.key] = {
+      label: s.label,
+      color: s.color ?? `hsl(var(--chart-${series.indexOf(s) + 1}))`,
+    };
+  }
 
   return (
     <div className="w-full h-full relative">
       <div className="absolute inset-0">
-        <ChartContainer config={chartConfig} className="w-full h-full">
-          <BarChart data={data}>
-            <CartesianGrid vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-              tickFormatter={(value) => value.slice(0, 3)}
-            />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="value" fill="var(--color-value)" radius={4} />
-          </BarChart>
+        <ChartContainer config={rechartsConfig} className="w-full h-full">
+          {chartType === "line" ? (
+            <LineChart data={data}>
+              {showGrid && <CartesianGrid vertical={false} />}
+              <XAxis
+                dataKey={xAxisKey}
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tickFormatter={(value) =>
+                  typeof value === "string" ? value.slice(0, 3) : value
+                }
+              />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {series.map((s) => (
+                <Line
+                  key={s.key}
+                  type="monotone"
+                  dataKey={s.key}
+                  stroke={s.color ?? `var(--color-${s.key})`}
+                  strokeWidth={s.strokeWidth ?? 2}
+                  strokeDasharray={s.strokeDasharray}
+                  dot={false}
+                />
+              ))}
+            </LineChart>
+          ) : (
+            <BarChart data={data}>
+              {showGrid && <CartesianGrid vertical={false} />}
+              <XAxis
+                dataKey={xAxisKey}
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tickFormatter={(value) =>
+                  typeof value === "string" ? value.slice(0, 3) : value
+                }
+              />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {series.map((s) => (
+                <Bar
+                  key={s.key}
+                  dataKey={s.key}
+                  fill={s.color ?? `var(--color-${s.key})`}
+                  radius={4}
+                />
+              ))}
+            </BarChart>
+          )}
         </ChartContainer>
       </div>
     </div>

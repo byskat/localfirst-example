@@ -106,21 +106,21 @@ const widgetLayoutSchema = z.object({
 });
 
 export const selectWidgetSchema = createSelectSchema(dashboardWidgetsTable, {
-  config: z.record(z.any()),
+  config: z.any(),
   layout: widgetLayoutSchema,
-  data_source: z.record(z.any()),
+  data_source: z.any(),
 });
 export const createWidgetSchema = createInsertSchema(dashboardWidgetsTable, {
-  config: z.record(z.any()),
+  config: z.any(),
   layout: widgetLayoutSchema,
-  data_source: z.record(z.any()),
+  data_source: z.any(),
 }).omit({
   created_at: true,
 });
 export const updateWidgetSchema = createUpdateSchema(dashboardWidgetsTable, {
-  config: z.record(z.any()).optional(),
+  config: z.any().optional(),
   layout: widgetLayoutSchema.optional(),
-  data_source: z.record(z.any()).optional(),
+  data_source: z.any().optional(),
 });
 
 export type Project = z.infer<typeof selectProjectSchema>;

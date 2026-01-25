@@ -1,51 +1,16 @@
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  Pencil,
-  Plus,
-  Trash2,
-  Monitor,
-  Tablet,
-  Smartphone,
-  ArrowDownRight,
-  Layout as LayoutIcon,
-} from "lucide-react";
+import { ArrowDownRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Responsive as ResponsiveGridLayout } from "react-grid-layout";
 import type { Layout, LayoutItem } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import {
-  Combobox,
-  ComboboxChip,
-  ComboboxChips,
-  ComboboxChipsInput,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxItem,
-  ComboboxList,
-  useComboboxAnchor,
-} from "@/components/ui/combobox";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { ChartWidget } from "@/components/dashboard/chart-widget";
-import { TableWidget } from "@/components/dashboard/table-widget";
+import { AddWidgetSheet } from "@/components/dashboard/add-widget-sheet";
+import { BreakpointToggle } from "@/components/dashboard/breakpoint-toggle";
+import { EditDashboardSheet } from "@/components/dashboard/edit-dashboard-sheet";
 import { WidgetCard } from "@/components/dashboard/widget-card";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -93,20 +58,11 @@ function DashboardDetail() {
 
   const { data: users } = useLiveQuery((q) => q.from({ usersCollection }), []);
 
-  const [showEditSheet, setShowEditSheet] = useState(false);
-  const [editingName, setEditingName] = useState<string | null>(null);
-  const [editingDescription, setEditingDescription] = useState<string | null>(
-    null
-  );
-  const [showWidgetSheet, setShowWidgetSheet] = useState(false);
-  const [widgetTitle, setWidgetTitle] = useState("");
-  const [widgetType, setWidgetType] = useState<"chart" | "table">("chart");
   const [containerWidth, setContainerWidth] = useState(1200);
   const [previewBreakpoint, setPreviewBreakpoint] = useState<
     "default" | "mobile" | "tablet" | "desktop"
   >("default");
   const containerRef = useRef<HTMLDivElement>(null);
-  const comboboxAnchor = useComboboxAnchor();
 
   useEffect(() => {
     const updateWidth = () => {
@@ -239,82 +195,6 @@ function DashboardDetail() {
     }
   };
 
-  const handleSaveName = () => {
-    if (editingName !== null && editingName !== dashboard.name) {
-      dashboardsCollection.update(dashboard.id, (draft) => {
-        draft.name = editingName;
-      });
-    }
-    setEditingName(null);
-  };
-
-  const handleSaveDescription = () => {
-    if (
-      editingDescription !== null &&
-      editingDescription !== (dashboard.description ?? ``)
-    ) {
-      dashboardsCollection.update(dashboard.id, (draft) => {
-        draft.description = editingDescription || null;
-      });
-    }
-    setEditingDescription(null);
-  };
-
-  const handleAddWidget = () => {
-    if (!widgetTitle.trim()) return;
-
-    // Calculate next available position for desktop
-    const maxY = Math.max(
-      0,
-      ...(widgets?.map((w) => w.layout.desktop.y + w.layout.desktop.h) ?? [0])
-    );
-
-    // Use small negative temp ID that will be replaced by server
-    // Random between -1000000 and -1 to avoid conflicts
-    const tempId = -Math.floor(Math.random() * 1000000) - 1;
-
-    widgetsCollection.insert({
-      id: tempId,
-      dashboard_id: Number.parseInt(dashboardId, 10),
-      type: widgetType,
-      title: widgetTitle,
-      config: {},
-      layout: {
-        mobile: {
-          x: 0,
-          y: maxY,
-          w: 12,
-          h: 4,
-          minW: 6,
-          minH: 2,
-        },
-        tablet: {
-          x: 0,
-          y: maxY,
-          w: 8,
-          h: 4,
-          minW: 4,
-          minH: 2,
-        },
-        desktop: {
-          x: 0,
-          y: maxY,
-          w: 6,
-          h: 4,
-          minW: 2,
-          minH: 2,
-        },
-      },
-      data_source: {},
-      created_at: new Date(),
-    });
-
-    // Reset form
-    setWidgetTitle("");
-    setWidgetType("chart");
-    setShowWidgetSheet(false);
-  };
-
   const gridLayouts: Partial<Record<string, Layout>> = {
     mobile:
       widgets?.map((w) => ({
@@ -379,94 +259,19 @@ function DashboardDetail() {
         <div className="flex gap-2 w-full justify-end flex-wrap md:w-auto">
           {canEdit && (
             <>
-              <div className="flex border rounded-md">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger
-                      onClick={() => setPreviewBreakpoint("default")}
-                      className={cn(
-                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
-                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-r-none [&_svg:not([class*='size-'])]:size-3.5",
-                        previewBreakpoint === "default"
-                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
-                      )}
-                    >
-                      <LayoutIcon className="h-4 w-4" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      Default (responsive)
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger
-                      onClick={() => setPreviewBreakpoint("mobile")}
-                      className={cn(
-                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
-                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-none border-x [&_svg:not([class*='size-'])]:size-3.5",
-                        previewBreakpoint === "mobile"
-                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
-                      )}
-                    >
-                      <Smartphone className="h-4 w-4" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      Mobile (480px)
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger
-                      onClick={() => setPreviewBreakpoint("tablet")}
-                      className={cn(
-                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
-                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-none border-x [&_svg:not([class*='size-'])]:size-3.5",
-                        previewBreakpoint === "tablet"
-                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
-                      )}
-                    >
-                      <Tablet className="h-4 w-4" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      Tablet (1024px)
-                    </TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger
-                      onClick={() => setPreviewBreakpoint("desktop")}
-                      className={cn(
-                        "focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border border-transparent bg-clip-padding text-sm font-medium focus-visible:ring-[3px] inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 outline-none select-none",
-                        "h-7 gap-1 px-2.5 text-[0.8rem] rounded-l-none [&_svg:not([class*='size-'])]:size-3.5",
-                        previewBreakpoint === "desktop"
-                          ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                          : "hover:bg-muted hover:text-foreground dark:hover:bg-muted/50"
-                      )}
-                    >
-                      <Monitor className="h-4 w-4" />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom">
-                      Desktop (1536px)
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowEditSheet(true)}
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowWidgetSheet(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Widget
-              </Button>
+              <BreakpointToggle
+                value={previewBreakpoint}
+                onChange={setPreviewBreakpoint}
+              />
+              <EditDashboardSheet
+                dashboard={dashboard}
+                users={users ?? []}
+                owner={owner}
+                usersMap={usersMap}
+                isOwner={dashboard.owner_id === session?.user.id}
+                onDelete={handleDelete}
+              />
+              <AddWidgetSheet dashboardId={Number.parseInt(dashboardId, 10)} />
             </>
           )}
         </div>
@@ -482,10 +287,7 @@ function DashboardDetail() {
               Add your first widget to start visualizing data.
             </p>
             {canEdit && (
-              <Button onClick={() => setShowWidgetSheet(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Widget
-              </Button>
+              <AddWidgetSheet dashboardId={Number.parseInt(dashboardId, 10)} />
             )}
           </CardContent>
         </Card>
@@ -496,7 +298,7 @@ function DashboardDetail() {
             className={
               previewBreakpoint !== "default"
                 ? "mx-auto border-2 border-dashed border-primary/30 rounded-lg p-4 bg-muted/20 overflow-x-auto"
-                : "overflow-x-hidden"
+                : ""
             }
             style={
               previewBreakpoint !== "default"
@@ -548,7 +350,7 @@ function DashboardDetail() {
                 {widgets?.map((widget) => (
                   <div key={widget.id.toString()}>
                     <WidgetCard
-                      title={widget.title}
+                      widget={widget}
                       canEdit={canEdit}
                       onDelete={() => {
                         if (
@@ -557,25 +359,7 @@ function DashboardDetail() {
                           widgetsCollection.delete(widget.id);
                         }
                       }}
-                    >
-                      {widget.type === "chart" ? (
-                        <ChartWidget
-                          title={widget.title}
-                          config={widget.config}
-                          dataSource={widget.data_source}
-                        />
-                      ) : widget.type === "table" ? (
-                        <TableWidget
-                          title={widget.title}
-                          config={widget.config}
-                          dataSource={widget.data_source}
-                        />
-                      ) : (
-                        <div className="text-sm text-muted-foreground">
-                          Unknown widget type: {widget.type}
-                        </div>
-                      )}
-                    </WidgetCard>
+                    />
                   </div>
                 ))}
               </ResponsiveGridLayout>
@@ -583,225 +367,6 @@ function DashboardDetail() {
           </div>
         </div>
       )}
-
-      <Sheet open={showEditSheet} onOpenChange={setShowEditSheet}>
-        <SheetContent hideOverlay className="overflow-y-auto px-6">
-          <SheetHeader>
-            <SheetTitle>Edit Dashboard</SheetTitle>
-          </SheetHeader>
-
-          <div className="mt-6 space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                value={editingName ?? dashboard.name}
-                onChange={(e) => setEditingName(e.target.value)}
-                onFocus={() => {
-                  if (editingName === null) setEditingName(dashboard.name);
-                }}
-                onBlur={handleSaveName}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Input
-                id="description"
-                value={editingDescription ?? dashboard.description ?? ``}
-                onChange={(e) => setEditingDescription(e.target.value)}
-                onFocus={() => {
-                  if (editingDescription === null)
-                    setEditingDescription(dashboard.description ?? ``);
-                }}
-                onBlur={handleSaveDescription}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Owner</Label>
-              <div className="text-sm">
-                {owner?.name ?? owner?.email ?? `Unknown`}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="members">Members</Label>
-              <Combobox
-                value={dashboard.shared_user_ids}
-                // biome-ignore lint/suspicious/noExplicitAny: Base UI types need fixing
-                onValueChange={(value: any) => {
-                  if (Array.isArray(value)) {
-                    dashboardsCollection.update(dashboard.id, (draft) => {
-                      draft.shared_user_ids = value;
-                    });
-                  }
-                }}
-                multiple
-              >
-                <ComboboxChips ref={comboboxAnchor}>
-                  {/* Selected member chips */}
-                  {dashboard.shared_user_ids.map((userId) => {
-                    const user = users?.find((u) => u.id === userId);
-                    if (!user) return null;
-                    return (
-                      <ComboboxChip key={userId}>
-                        {user.name ?? user.email}
-                      </ComboboxChip>
-                    );
-                  })}
-                  <ComboboxChipsInput placeholder="Add members..." />
-                </ComboboxChips>
-                <ComboboxContent anchor={comboboxAnchor}>
-                  <ComboboxList>
-                    {users?.filter(
-                      (u) =>
-                        u.id !== dashboard.owner_id &&
-                        !dashboard.shared_user_ids.includes(u.id)
-                    ).length === 0 ? (
-                      <ComboboxEmpty>No users found</ComboboxEmpty>
-                    ) : (
-                      users
-                        ?.filter(
-                          (u) =>
-                            u.id !== dashboard.owner_id &&
-                            !dashboard.shared_user_ids.includes(u.id)
-                        )
-                        .map((user) => (
-                          <ComboboxItem key={user.id} value={user.id}>
-                            {user.name ?? user.email}
-                          </ComboboxItem>
-                        ))
-                    )}
-                  </ComboboxList>
-                </ComboboxContent>
-              </Combobox>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Editors (can modify widgets)</Label>
-              <div className="space-y-2">
-                {dashboard.shared_user_ids.map((userId) => {
-                  const user = usersMap.get(userId);
-                  const isEditor = dashboard.editor_ids.includes(userId);
-                  return (
-                    <div key={userId} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`editor-${userId}`}
-                        checked={isEditor}
-                        onCheckedChange={(checked) => {
-                          dashboardsCollection.update(dashboard.id, (draft) => {
-                            if (checked) {
-                              if (!draft.editor_ids.includes(userId)) {
-                                draft.editor_ids = [
-                                  ...draft.editor_ids,
-                                  userId,
-                                ];
-                              }
-                            } else {
-                              draft.editor_ids = draft.editor_ids.filter(
-                                (id) => id !== userId
-                              );
-                            }
-                          });
-                        }}
-                      />
-                      <Label
-                        htmlFor={`editor-${userId}`}
-                        className="text-sm cursor-pointer"
-                      >
-                        {user?.name ?? user?.email ?? `Unknown`}
-                      </Label>
-                    </div>
-                  );
-                })}
-                {dashboard.shared_user_ids.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    Add members first to grant editor permissions
-                  </p>
-                )}
-              </div>
-            </div>
-
-            {dashboard.owner_id === session?.user.id && (
-              <div className="pt-6 border-t">
-                <div className="space-y-2">
-                  <Label className="text-destructive">Danger Zone</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Deleting this dashboard will also remove all its widgets.
-                  </p>
-                  <Button
-                    variant="destructive"
-                    onClick={handleDelete}
-                    className="w-full"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Dashboard
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      <Sheet open={showWidgetSheet} onOpenChange={setShowWidgetSheet}>
-        <SheetContent>
-          <SheetHeader>
-            <SheetTitle>Add Widget</SheetTitle>
-          </SheetHeader>
-
-          <div className="flex flex-col gap-6 p-4">
-            <div className="space-y-2">
-              <Label htmlFor="widget-title">Title</Label>
-              <Input
-                id="widget-title"
-                value={widgetTitle}
-                onChange={(e) => setWidgetTitle(e.target.value)}
-                placeholder="Enter widget title"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Widget Type</Label>
-              <RadioGroup
-                value={widgetType}
-                onValueChange={(value: "chart" | "table") =>
-                  setWidgetType(value)
-                }
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="chart" id="widget-type-chart" />
-                  <Label
-                    htmlFor="widget-type-chart"
-                    className="cursor-pointer font-normal"
-                  >
-                    Chart
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="table" id="widget-type-table" />
-                  <Label
-                    htmlFor="widget-type-table"
-                    className="cursor-pointer font-normal"
-                  >
-                    Table
-                  </Label>
-                </div>
-              </RadioGroup>
-            </div>
-
-            <Button
-              onClick={handleAddWidget}
-              disabled={!widgetTitle.trim()}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Widget
-            </Button>
-          </div>
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
