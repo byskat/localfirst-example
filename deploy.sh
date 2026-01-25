@@ -48,15 +48,15 @@ echo ""
 
 # Pull latest images (including pre-built app image)
 echo -e "${YELLOW}📦 Pulling latest Docker images...${NC}"
-docker compose -f docker-compose.prod.yaml pull
+docker compose --env-file .env.production -f docker-compose.prod.yaml pull
 
 # Stop existing containers
 echo -e "${YELLOW}🛑 Stopping existing containers...${NC}"
-docker compose -f docker-compose.prod.yaml down
+docker compose --env-file .env.production -f docker-compose.prod.yaml down
 
 # Start services
 echo -e "${YELLOW}🚀 Starting services...${NC}"
-docker compose -f docker-compose.prod.yaml up -d
+docker compose --env-file .env.production -f docker-compose.prod.yaml up -d
 
 # Wait for services to be healthy
 echo -e "${YELLOW}⏳ Waiting for services to be healthy...${NC}"
@@ -64,13 +64,13 @@ sleep 10
 
 # Run migrations
 echo -e "${YELLOW}🗄️  Running database migrations...${NC}"
-docker compose -f docker-compose.prod.yaml exec -T app sh -c "cd /app && node_modules/.bin/drizzle-kit migrate"
+docker compose --env-file .env.production -f docker-compose.prod.yaml exec -T app sh -c "cd /app && node_modules/.bin/drizzle-kit migrate"
 
 echo ""
 echo -e "${GREEN}✅ Deployment complete!${NC}"
 echo ""
 echo -e "${GREEN}📊 Service Status:${NC}"
-docker compose -f docker-compose.prod.yaml ps
+docker compose --env-file .env.production -f docker-compose.prod.yaml ps
 echo ""
 echo -e "${GREEN}🌐 Your app is available at:${NC}"
 echo -e "   App: ${APP_URL}"

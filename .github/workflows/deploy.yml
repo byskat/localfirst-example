@@ -109,20 +109,20 @@ jobs:
             set +a
 
             echo "🔨 Pulling and deploying services..."
-            docker compose -f docker-compose.prod.yaml pull
-            docker compose -f docker-compose.prod.yaml up -d
+            docker compose --env-file .env.production -f docker-compose.prod.yaml pull
+            docker compose --env-file .env.production -f docker-compose.prod.yaml up -d
 
             echo "⏳ Waiting for services to be healthy..."
             sleep 15
 
             echo "🗄️ Running migrations..."
-            docker compose -f docker-compose.prod.yaml exec -T app sh -c "cd /app && node_modules/.bin/drizzle-kit migrate" || echo "⚠️ Migrations may have already been applied"
+            docker compose --env-file .env.production -f docker-compose.prod.yaml exec -T app sh -c "cd /app && node_modules/.bin/drizzle-kit migrate" || echo "⚠️ Migrations may have already been applied"
 
             echo "🧹 Cleaning up old images..."
             docker image prune -f
 
             echo "✅ Deployment complete!"
-            docker compose -f docker-compose.prod.yaml ps
+            docker compose --env-file .env.production -f docker-compose.prod.yaml ps
           ENDSSH
 
       - name: Notify on failure
