@@ -82,6 +82,7 @@ jobs:
           ELECTRIC_DOMAIN=${{ secrets.ELECTRIC_DOMAIN }}
           ELECTRIC_INSECURE=false
           ELECTRIC_AUTH_MODE=secure
+          ELECTRIC_SECRET=${{ secrets.ELECTRIC_SECRET }}
           BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
           ACME_EMAIL=${{ secrets.ACME_EMAIL }}
           ENVEOF

@@ -38,6 +38,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-electric}?sslmode=disable
       ELECTRIC_INSECURE: ${ELECTRIC_INSECURE:-false}
       ELECTRIC_AUTH_MODE: ${ELECTRIC_AUTH_MODE:-insecure}
+      ELECTRIC_SECRET: ${ELECTRIC_SECRET}
     networks:
       - internal
     healthcheck:
