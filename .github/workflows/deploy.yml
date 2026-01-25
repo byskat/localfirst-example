@@ -61,7 +61,19 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Install SSH Key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+
+      - name: Create .env.production on server
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
+            cd ${{ secrets.DEPLOY_PATH }}
             cat > .env.production << 'ENVEOF'
+          APP_IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           POSTGRES_DB=${{ secrets.POSTGRES_DB }}
           POSTGRES_USER=${{ secrets.POSTGRES_USER }}
           POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
@@ -73,13 +85,13 @@ jobs:
           BETTER_AUTH_SECRET=${{ secrets.BETTER_AUTH_SECRET }}
           ACME_EMAIL=${{ secrets.ACME_EMAIL }}
           ENVEOF
-          EOF
+          ENDSSH
 
       - name: Deploy to DigitalOcean
         env:
           IMAGE_TAG: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         run: |
-          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'ENDSSH'
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
 
@@ -105,7 +117,7 @@ jobs:
 
             echo "✅ Deployment complete!"
             docker compose -f docker-compose.prod.yaml ps
-          EOF
+          ENDSSH
 
       - name: Notify on failure
         if: failure()
