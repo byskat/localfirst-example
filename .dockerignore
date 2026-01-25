@@ -1,0 +1,16 @@
+node_modules
+.git
+.env
+.env.*
+!.env.example
+dist
+.output
+*.log
+.vscode
+.idea
+.DS_Store
+coverage
+.turbo
+.next
+.vercel
+.sst

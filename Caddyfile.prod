@@ -1,0 +1,13 @@
+{
+    email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+    reverse_proxy app:3000
+    encode gzip
+}
+
+{$ELECTRIC_DOMAIN} {
+    reverse_proxy electric:3000
+    encode gzip
+}
