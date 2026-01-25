@@ -18,7 +18,6 @@ RUN pnpm install --frozen-lockfile
 # Copy source code
 COPY . .
 
-# Build the app
 RUN pnpm build
 
 # Production stage

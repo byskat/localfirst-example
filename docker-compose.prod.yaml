@@ -47,12 +47,9 @@ services:
       retries: 3
 
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NODE_ENV: production
+    image: ${APP_IMAGE:-ghcr.io/your-github-username/demo-electric:latest}
     restart: unless-stopped
+    pull_policy: always
     depends_on:
       postgres:
         condition: service_healthy

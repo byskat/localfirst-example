@@ -43,13 +43,12 @@ fi
 echo -e "${GREEN}✅ Environment variables validated${NC}"
 echo ""
 
-# Pull latest images
+# Note: APP_IMAGE should be set in environment or .env.production
+# Example: APP_IMAGE=ghcr.io/your-username/your-repo:latest
+
+# Pull latest images (including pre-built app image)
 echo -e "${YELLOW}📦 Pulling latest Docker images...${NC}"
 docker compose -f docker-compose.prod.yaml pull
-
-# Build app image
-echo -e "${YELLOW}🔨 Building application image...${NC}"
-docker compose -f docker-compose.prod.yaml build app
 
 # Stop existing containers
 echo -e "${YELLOW}🛑 Stopping existing containers...${NC}"

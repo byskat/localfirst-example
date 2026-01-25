@@ -128,6 +128,9 @@ nano .env.production
 
 Fill in your actual values:
 ```bash
+# Replace with your GitHub username and repo name
+APP_IMAGE=ghcr.io/your-username/demo-electric:latest
+
 POSTGRES_DB=electric
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=YOUR_SUPER_SECURE_PASSWORD_HERE
@@ -251,7 +254,20 @@ ssh-keyscan -H your.droplet.ip
 
 Copy the output (starts with your IP and contains a long key).
 
-### Step 4: Configure GitHub Secrets
+### Step 4: Enable GitHub Container Registry
+
+Your repository needs to be able to push Docker images:
+
+1. Go to your GitHub repository
+2. **Settings** → **Actions** → **General**
+3. Scroll to **Workflow permissions**
+4. Select **Read and write permissions**
+5. Check **Allow GitHub Actions to create and approve pull requests**
+6. Click **Save**
+
+This allows the workflow to push images to GitHub Container Registry.
+
+### Step 5: Configure GitHub Secrets
 
 Go to your GitHub repository:
 1. **Settings** → **Secrets and variables** → **Actions**
@@ -285,7 +301,22 @@ Copy the **entire output** including:
 -----END OPENSSH PRIVATE KEY-----
 ```
 
-### Step 5: Commit GitHub Actions Workflow
+### Step 6: Update docker-compose.prod.yaml
+
+Edit the APP_IMAGE in `docker-compose.prod.yaml` to match your repository:
+
+```bash
+nano docker-compose.prod.yaml
+```
+
+Change:
+```yaml
+image: ${APP_IMAGE:-ghcr.io/your-github-username/demo-electric:latest}
+```
+
+To use your actual GitHub username and repository name.
+
+### Step 7: Commit GitHub Actions Workflow
 
 The workflow file is already in `.github/workflows/deploy.yml`.
 
@@ -296,7 +327,7 @@ git commit -m "Add GitHub Actions deployment workflow"
 git push origin main
 ```
 
-### Step 6: Test Automated Deployment
+### Step 8: Test Automated Deployment
 
 Make a small change to test the deployment:
 ```bash
@@ -315,7 +346,7 @@ Watch the deployment in GitHub:
 3. You should see your workflow running
 4. Click on it to see real-time logs
 
-### Step 7: Manual Deployment Trigger
+### Step 9: Manual Deployment Trigger
 
 You can also trigger deployments manually:
 1. Go to **Actions** tab
@@ -328,11 +359,11 @@ You can also trigger deployments manually:
 
 Once set up, every push to `main` will:
 
-1. ✅ Checkout latest code
-2. ✅ SSH into your server
-3. ✅ Pull latest code from git
-4. ✅ Build new Docker image for app
-5. ✅ Pull latest images for other services
+1. ✅ Build Docker image in GitHub Actions (with plenty of RAM)
+2. ✅ Push image to GitHub Container Registry
+3. ✅ SSH into your server
+4. ✅ Pull latest code from git
+5. ✅ Pull pre-built Docker image
 6. ✅ Deploy with zero-downtime
 7. ✅ Run database migrations
 8. ✅ Clean up old images
