@@ -27,9 +27,9 @@ function PresentationPage() {
       progress: true,
       center: true,
       hash: true,
-      transition: "convex",
+      transition: "slide",
       transitionSpeed: "default",
-      backgroundTransition: "zoom",
+      backgroundTransition: "fade",
       slideNumber: "c/t",
     });
 
@@ -46,6 +46,13 @@ function PresentationPage() {
   return (
     <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
       <style>{`
+        .reveal {
+          width: 100%;
+          height: 100%;
+        }
+        .reveal .slides {
+          text-align: left;
+        }
         .reveal .controls {
           color: hsl(var(--primary));
         }
@@ -146,6 +153,28 @@ function PresentationPage() {
                   </p>
                 </div>
               </div>
+              <div className="fragment text-sm text-muted-foreground text-center mt-8">
+                <p>
+                  Principis definits per:{" "}
+                  <a
+                    href="https://www.inkandswitch.com/local-first/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Ink & Switch Research
+                  </a>{" "}
+                  |{" "}
+                  <a
+                    href="https://martin.kleppmann.com/papers/local-first.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Article acadèmic (PDF)
+                  </a>
+                </p>
+              </div>
             </div>
           </section>
 
@@ -172,7 +201,7 @@ function PresentationPage() {
                       <p className="text-lg">❌ Latència en cada interacció</p>
                     </div>
                     <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30">
-                      <p className="text-lg">❌ No funciona sense internet</p>
+                      <p className="text-lg">❌ No funciona sense xarxa</p>
                     </div>
                     <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30">
                       <p className="text-lg">
@@ -202,6 +231,107 @@ function PresentationPage() {
                     </div>
                   </div>
                 </div>
+              </div>{" "}
+              <div className="fragment text-sm text-muted-foreground text-center mt-8">
+                <p>
+                  <a
+                    href="https://electric-sql.com/docs/guides/shapes"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Electric Shapes Documentation
+                  </a>{" "}
+                  |{" "}
+                  <a
+                    href="https://www.confluent.io/learn/change-data-capture/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Change Data Capture (CDC)
+                  </a>{" "}
+                  |{" "}
+                  <a
+                    href="https://crdt.tech/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    CRDTs
+                  </a>
+                </p>
+              </div>{" "}
+            </div>
+          </section>
+
+          {/* Architecture Diagrams */}
+          <section
+            className="flex items-center justify-center"
+            data-transition="convex"
+          >
+            <div className="w-full px-20">
+              <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
+                Arquitectura: Tradicional (REST)
+              </h2>
+              <div className="max-w-5xl mx-auto">
+                <div className="flex flex-col items-center gap-8">
+                  {/* Traditional Architecture Diagram - Placeholder */}
+                  <div className="w-full h-80 flex items-center justify-center border-2 border-dashed border-border rounded-lg bg-muted/30">
+                    <p className="text-2xl text-muted-foreground">
+                      [ Diagrama REST Tradicional ]
+                    </p>
+                  </div>
+
+                  <div className="fragment text-sm text-muted-foreground text-center mt-4">
+                    <p>
+                      Referència:{" "}
+                      <a
+                        href="https://martinfowler.com/articles/patterns-of-distributed-systems/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Patterns of Distributed Systems - M. Fowler
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section
+            className="flex items-center justify-center"
+            data-transition="concave"
+          >
+            <div className="w-full px-20">
+              <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
+                Arquitectura: Local-First
+              </h2>
+              <div className="max-w-5xl mx-auto">
+                <div className="flex flex-col items-center gap-8">
+                  {/* Local-First Architecture Diagram - Placeholder */}
+                  <div className="w-full h-80 flex items-center justify-center border-2 border-dashed border-border rounded-lg bg-muted/30">
+                    <p className="text-2xl text-muted-foreground">
+                      [ Diagrama Local-First ]
+                    </p>
+                  </div>
+
+                  <div className="fragment text-sm text-muted-foreground text-center mt-4">
+                    <p>
+                      Referència:{" "}
+                      <a
+                        href="https://www.inkandswitch.com/local-first/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline"
+                      >
+                        Local-First Software - Ink & Switch
+                      </a>
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
@@ -209,7 +339,7 @@ function PresentationPage() {
           {/* Electric SQL Introduction */}
           <section
             className="flex items-center justify-center"
-            data-transition="fade"
+            data-transition="convex"
           >
             <div className="w-full px-20">
               <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
@@ -248,13 +378,26 @@ function PresentationPage() {
                     </p>
                   </div>
                 </div>
+                <div className="fragment text-sm text-muted-foreground text-center mt-8">
+                  <p>
+                    Més info:{" "}
+                    <a
+                      href="https://electric-sql.com/docs"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      Electric SQL Documentation
+                    </a>
+                  </p>
+                </div>
               </div>
             </div>
           </section>
 
           <section
             className="flex items-center justify-center"
-            data-transition="slide"
+            data-transition="concave"
           >
             <div className="w-full px-20">
               <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
@@ -312,7 +455,7 @@ function PresentationPage() {
 
           <section
             className="flex items-center justify-center"
-            data-transition="fade"
+            data-transition="zoom-in"
           >
             <div className="w-full px-20">
               <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
@@ -349,7 +492,7 @@ function PresentationPage() {
 
           <section
             className="flex items-center justify-center"
-            data-transition="zoom"
+            data-transition="zoom-out"
           >
             <div className="w-full px-20">
               <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
@@ -399,12 +542,33 @@ function PresentationPage() {
                   </p>
                 </div>
               </div>
+              <div className="fragment text-sm text-muted-foreground text-center mt-8">
+                <p>
+                  <a
+                    href="https://offlinefirst.org/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Offline First
+                  </a>{" "}
+                  |{" "}
+                  <a
+                    href="https://jepsen.io/consistency"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Consistency Models - Jepsen
+                  </a>
+                </p>
+              </div>
             </div>
           </section>
 
           <section
             className="flex items-center justify-center"
-            data-transition="slide"
+            data-transition="fade"
           >
             <div className="w-full px-20">
               <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
@@ -444,12 +608,43 @@ function PresentationPage() {
                   </p>
                 </div>
               </div>
+              <div className="fragment text-sm text-muted-foreground text-center mt-8">
+                <p>
+                  Exemples reals:{" "}
+                  <a
+                    href="https://linear.app/method/offline-first"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Linear
+                  </a>{" "}
+                  |{" "}
+                  <a
+                    href="https://www.figma.com/blog/how-figmas-multiplayer-technology-works/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Figma
+                  </a>{" "}
+                  |{" "}
+                  <a
+                    href="https://www.notion.so/help/offline-mode"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Notion
+                  </a>
+                </p>
+              </div>
             </div>
           </section>
 
           <section
             className="flex items-center justify-center"
-            data-transition="zoom-in"
+            data-transition="zoom"
           >
             <div className="text-center space-y-8">
               <h2 className="text-6xl font-bold text-foreground">Gràcies!</h2>
