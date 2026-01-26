@@ -5,6 +5,8 @@ import {
   LineChart,
   AreaChart,
   PieChart,
+  Gauge,
+  Activity,
 } from "lucide-react";
 import { useState } from "react";
 import { eq, useLiveQuery } from "@tanstack/react-db";
@@ -66,6 +68,10 @@ export function AddWidgetSheet({ dashboardId }: Readonly<AddWidgetSheetProps>) {
         return AreaChart;
       case "pie":
         return PieChart;
+      case "radial":
+        return Gauge;
+      case "radar":
+        return Activity;
       default:
         return BarChart3;
     }

@@ -10,6 +10,13 @@ import {
   LineChart,
   Pie,
   PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
+  RadialBar,
+  RadialBarChart,
   XAxis,
   YAxis,
 } from "recharts";
@@ -42,7 +49,7 @@ interface ChartSeries {
 interface ChartWidgetConfig {
   series?: ChartSeries[];
   xAxisKey?: string;
-  chartType?: "bar" | "line" | "area" | "pie";
+  chartType?: "bar" | "line" | "area" | "pie" | "radial" | "radar";
   showGrid?: boolean;
   showLegend?: boolean;
   // For pie charts
@@ -198,6 +205,57 @@ export function ChartWidget({
                 />
               ))}
             </AreaChart>
+          ) : chartType === "radial" ? (
+            <RadialBarChart
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius="20%"
+              outerRadius="90%"
+              barSize={10}
+              startAngle={90}
+              endAngle={-270}
+            >
+              {showGrid && <PolarGrid gridType="circle" />}
+              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
+              <PolarRadiusAxis angle={90} domain={[0, 100]} tick={false} />
+              <RadialBar
+                dataKey={chartConfig.dataKey ?? series[0]?.key ?? "value"}
+                cornerRadius={10}
+                fill={CHART_COLORS[0]}
+                background
+              >
+                {data.map((entry) => (
+                  <Cell
+                    key={entry[chartConfig.nameKey ?? "name"] ?? entry.id}
+                    fill={
+                      CHART_COLORS[data.indexOf(entry) % CHART_COLORS.length]
+                    }
+                  />
+                ))}
+              </RadialBar>
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              {showLegend && <Legend />}
+            </RadialBarChart>
+          ) : chartType === "radar" ? (
+            <RadarChart data={data} cx="50%" cy="50%" outerRadius="70%">
+              <PolarGrid />
+              <PolarAngleAxis dataKey={chartConfig.nameKey ?? xAxisKey} />
+              <PolarRadiusAxis angle={90} domain={[0, 100]} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {showLegend && <Legend />}
+              {series.map((s) => (
+                <Radar
+                  key={s.key}
+                  name={s.label}
+                  dataKey={s.key}
+                  stroke={s.color ?? `var(--color-${s.key})`}
+                  fill={s.color ?? `var(--color-${s.key})`}
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                />
+              ))}
+            </RadarChart>
           ) : (
             <BarChart data={data}>
               {showGrid && <CartesianGrid vertical={false} />}

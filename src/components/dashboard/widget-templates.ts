@@ -3,7 +3,7 @@ export interface WidgetTemplate {
   name: string;
   description: string;
   type: "chart" | "table";
-  chartType?: "line" | "bar" | "area" | "pie";
+  chartType?: "line" | "bar" | "area" | "pie" | "radial" | "radar";
   data: unknown;
   config: unknown;
 }
@@ -187,6 +187,61 @@ export const CHART_TEMPLATES: WidgetTemplate[] = [
       dataKey: "value",
       showLegend: false,
       colors: ["#2563eb", "#16a34a", "#dc2626", "#ca8a04", "#9333ea"],
+    },
+  },
+  {
+    id: "radial-chart-gauge",
+    name: "Radial Chart - Gauge",
+    description: "Speedometer-style performance gauge",
+    type: "chart",
+    chartType: "radial",
+    data: [
+      { name: "Efficiency", value: 87 },
+      { name: "Uptime", value: 92 },
+      { name: "Quality", value: 95 },
+    ],
+    config: {
+      chartType: "radial" as const,
+      dataKey: "value",
+      nameKey: "name",
+      showGrid: true,
+      showLegend: true,
+      colors: ["#10b981", "#3b82f6", "#f59e0b"],
+    },
+  },
+  {
+    id: "radar-chart-metrics",
+    name: "Radar Chart - Metrics",
+    description: "Multi-dimensional performance metrics",
+    type: "chart",
+    chartType: "radar",
+    data: [
+      { metric: "Quality", current: 92, target: 95 },
+      { metric: "Speed", current: 68, target: 85 },
+      { metric: "Efficiency", current: 88, target: 78 },
+      { metric: "Safety", current: 95, target: 98 },
+      { metric: "Reliability", current: 73, target: 90 },
+      { metric: "Capacity", current: 85, target: 70 },
+    ],
+    config: {
+      chartType: "radar" as const,
+      nameKey: "metric",
+      showGrid: true,
+      showLegend: true,
+      series: [
+        {
+          key: "current",
+          label: "Current",
+          color: "#3b82f6",
+          strokeWidth: 2,
+        },
+        {
+          key: "target",
+          label: "Target",
+          color: "#22c55e",
+          strokeWidth: 2,
+        },
+      ],
     },
   },
 ];
