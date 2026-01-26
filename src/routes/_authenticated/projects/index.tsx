@@ -9,41 +9,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { dashboardsCollection, usersCollection } from "@/lib/collections";
+import { projectCollection, usersCollection } from "@/lib/collections";
 import { useCollectionPersistence } from "@/lib/use-collection-persistence";
-import { CreateDashboardDialog } from "@/components/create-dashboard-dialog";
+import { CreateProjectDialog } from "@/components/create-project-dialog";
 import { Plus } from "lucide-react";
 
-export const Route = createFileRoute(`/_authenticated/dashboards/`)({
+export const Route = createFileRoute(`/_authenticated/projects/`)({
   loader: async () => {
-    await Promise.all([
-      dashboardsCollection.preload(),
-      usersCollection.preload(),
-    ]);
+    await Promise.all([projectCollection.preload(), usersCollection.preload()]);
   },
-  component: DashboardsList,
+  component: ProjectsList,
 });
 
-function DashboardsList() {
+function ProjectsList() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
 
   // Enable IndexedDB persistence
-  useCollectionPersistence(dashboardsCollection);
+  useCollectionPersistence(projectCollection);
   useCollectionPersistence(usersCollection);
 
-  const { data: dashboards } = useLiveQuery(
-    (q) => q.from({ dashboardsCollection }),
+  const { data: projects } = useLiveQuery(
+    (q) => q.from({ projectCollection }),
     []
   );
 
   const { data: users } = useLiveQuery((q) => q.from({ usersCollection }), []);
 
-  // Sort dashboards by created_at descending (newest first)
-  const sortedDashboards = dashboards
-    ? [...dashboards].sort(
-        (a, b) => b.created_at.getTime() - a.created_at.getTime()
-      )
-    : [];
+  // Handle loading state
+  if (!projects || !users) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
+
+  // Sort projects by created_at descending (newest first)
+  const sortedProjects = [...projects].sort(
+    (a, b) => b.created_at.getTime() - a.created_at.getTime()
+  );
 
   const usersMap = new Map(users?.map((u) => [u.id, u.name ?? u.email]) ?? []);
 
@@ -51,47 +55,39 @@ function DashboardsList() {
     <div className="p-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboards</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
           <p className="text-muted-foreground">
-            Create and manage your custom dashboards
+            Manage your projects and todos
           </p>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {sortedDashboards.map((dashboard) => (
+        {sortedProjects.map((project) => (
           <Link
-            key={dashboard.id}
-            to="/dashboard/$dashboardId"
-            params={{ dashboardId: dashboard.id.toString() }}
+            key={project.id}
+            to="/project/$projectId"
+            params={{ projectId: project.id.toString() }}
           >
             <Card className="hover:bg-muted/50 transition-colors cursor-pointer h-full">
               <CardHeader>
-                <CardTitle className="line-clamp-1">{dashboard.name}</CardTitle>
-                {dashboard.description && (
+                <CardTitle className="line-clamp-1">{project.name}</CardTitle>
+                {project.description && (
                   <CardDescription className="line-clamp-2">
-                    {dashboard.description}
+                    {project.description}
                   </CardDescription>
                 )}
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
                   <div>
-                    Owner: {usersMap.get(dashboard.owner_id) ?? `Unknown`}
+                    Owner: {usersMap.get(project.owner_id) ?? `Unknown`}
                   </div>
-                  {dashboard.shared_user_ids.length > 0 && (
+                  {project.shared_user_ids.length > 0 && (
                     <div className="flex items-center gap-1">
                       <Badge variant="secondary" className="text-xs">
-                        {dashboard.shared_user_ids.length} member
-                        {dashboard.shared_user_ids.length !== 1 ? `s` : ``}
-                      </Badge>
-                    </div>
-                  )}
-                  {dashboard.editor_ids.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="text-xs">
-                        {dashboard.editor_ids.length} editor
-                        {dashboard.editor_ids.length !== 1 ? `s` : ``}
+                        {project.shared_user_ids.length} member
+                        {project.shared_user_ids.length !== 1 ? `s` : ``}
                       </Badge>
                     </div>
                   )}
@@ -101,7 +97,7 @@ function DashboardsList() {
           </Link>
         ))}
 
-        {/* Add New Dashboard Card */}
+        {/* Add New Project Card */}
         <Card
           className="hover:bg-muted/50 transition-colors cursor-pointer h-full border-dashed"
           onClick={() => setShowCreateDialog(true)}
@@ -109,16 +105,16 @@ function DashboardsList() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Plus className="h-5 w-5" />
-              New Dashboard
+              New Project
             </CardTitle>
             <CardDescription>
-              Create a new dashboard with custom widgets
+              Create a new project to organize your todos
             </CardDescription>
           </CardHeader>
         </Card>
       </div>
 
-      <CreateDashboardDialog
+      <CreateProjectDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
       />

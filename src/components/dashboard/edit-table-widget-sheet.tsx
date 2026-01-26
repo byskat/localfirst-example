@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -147,61 +148,63 @@ export function EditTableWidgetSheet({
           </Button>
         }
       ></SheetTrigger>
-      <SheetContent hideOverlay className="overflow-y-auto px-6">
+      <SheetContent hideOverlay>
         <SheetHeader>
           <SheetTitle>Edit Table Widget</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-6 mt-6">
-          <div className="space-y-2">
-            <Label htmlFor="table-title">Title</Label>
-            <Input
-              id="table-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleTitleBlur}
-              placeholder="Enter table title"
-            />
-          </div>
+        <SheetBody>
+          <div className="flex flex-col gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="table-title">Title</Label>
+              <Input
+                id="table-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleTitleBlur}
+                placeholder="Enter table title"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="table-data">Data (JSON)</Label>
-            <textarea
-              id="table-data"
-              value={data}
-              onChange={(e) => {
-                setData(e.target.value);
-                if (dataError) setDataError(null);
-              }}
-              onBlur={handleDataBlur}
-              placeholder='[{"id": 1, "name": "Item 1", "value": 100}]'
-              className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
-                dataError ? "border-red-500" : ""
-              }`}
-            />
-            {dataError && <p className="text-sm text-red-500">{dataError}</p>}
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="table-data">Data (JSON)</Label>
+              <textarea
+                id="table-data"
+                value={data}
+                onChange={(e) => {
+                  setData(e.target.value);
+                  if (dataError) setDataError(null);
+                }}
+                onBlur={handleDataBlur}
+                placeholder='[{"id": 1, "name": "Item 1", "value": 100}]'
+                className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
+                  dataError ? "border-red-500" : ""
+                }`}
+              />
+              {dataError && <p className="text-sm text-red-500">{dataError}</p>}
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="table-config">Configuration (JSON)</Label>
-            <textarea
-              id="table-config"
-              value={config}
-              onChange={(e) => {
-                setConfig(e.target.value);
-                if (configError) setConfigError(null);
-              }}
-              onBlur={handleConfigBlur}
-              placeholder='{"columns": ["id", "name", "value"]}'
-              className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
-                configError ? "border-red-500" : ""
-              }`}
-            />
-            {configError && (
-              <p className="text-sm text-red-500">{configError}</p>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="table-config">Configuration (JSON)</Label>
+              <textarea
+                id="table-config"
+                value={config}
+                onChange={(e) => {
+                  setConfig(e.target.value);
+                  if (configError) setConfigError(null);
+                }}
+                onBlur={handleConfigBlur}
+                placeholder='{"columns": ["id", "name", "value"]}'
+                className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
+                  configError ? "border-red-500" : ""
+                }`}
+              />
+              {configError && (
+                <p className="text-sm text-red-500">{configError}</p>
+              )}
+            </div>
           </div>
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

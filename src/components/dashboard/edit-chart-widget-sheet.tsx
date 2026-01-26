@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -147,61 +148,63 @@ export function EditChartWidgetSheet({
           </Button>
         }
       ></SheetTrigger>
-      <SheetContent hideOverlay className="overflow-y-auto px-6">
+      <SheetContent hideOverlay>
         <SheetHeader>
           <SheetTitle>Edit Chart Widget</SheetTitle>
         </SheetHeader>
 
-        <div className="flex flex-col gap-6 mt-6">
-          <div className="space-y-2">
-            <Label htmlFor="chart-title">Title</Label>
-            <Input
-              id="chart-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleTitleBlur}
-              placeholder="Enter chart title"
-            />
-          </div>
+        <SheetBody>
+          <div className="flex flex-col gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="chart-title">Title</Label>
+              <Input
+                id="chart-title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleTitleBlur}
+                placeholder="Enter chart title"
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="chart-data">Data (JSON)</Label>
-            <textarea
-              id="chart-data"
-              value={data}
-              onChange={(e) => {
-                setData(e.target.value);
-                if (dataError) setDataError(null);
-              }}
-              onBlur={handleDataBlur}
-              placeholder='[{"month": "Jan", "sales": 100}]'
-              className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
-                dataError ? "border-red-500" : ""
-              }`}
-            />
-            {dataError && <p className="text-sm text-red-500">{dataError}</p>}
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="chart-data">Data (JSON)</Label>
+              <textarea
+                id="chart-data"
+                value={data}
+                onChange={(e) => {
+                  setData(e.target.value);
+                  if (dataError) setDataError(null);
+                }}
+                onBlur={handleDataBlur}
+                placeholder='[{"month": "Jan", "sales": 100}]'
+                className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
+                  dataError ? "border-red-500" : ""
+                }`}
+              />
+              {dataError && <p className="text-sm text-red-500">{dataError}</p>}
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="chart-config">Configuration (JSON)</Label>
-            <textarea
-              id="chart-config"
-              value={config}
-              onChange={(e) => {
-                setConfig(e.target.value);
-                if (configError) setConfigError(null);
-              }}
-              onBlur={handleConfigBlur}
-              placeholder='{"chartType": "line", "series": [{"key": "sales", "label": "Sales"}]}'
-              className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
-                configError ? "border-red-500" : ""
-              }`}
-            />
-            {configError && (
-              <p className="text-sm text-red-500">{configError}</p>
-            )}
+            <div className="space-y-2">
+              <Label htmlFor="chart-config">Configuration (JSON)</Label>
+              <textarea
+                id="chart-config"
+                value={config}
+                onChange={(e) => {
+                  setConfig(e.target.value);
+                  if (configError) setConfigError(null);
+                }}
+                onBlur={handleConfigBlur}
+                placeholder='{"chartType": "line", "series": [{"key": "sales", "label": "Sales"}]}'
+                className={`w-full h-48 p-2 border rounded-md font-mono text-sm resize-y ${
+                  configError ? "border-red-500" : ""
+                }`}
+              />
+              {configError && (
+                <p className="text-sm text-red-500">{configError}</p>
+              )}
+            </div>
           </div>
-        </div>
+        </SheetBody>
       </SheetContent>
     </Sheet>
   );

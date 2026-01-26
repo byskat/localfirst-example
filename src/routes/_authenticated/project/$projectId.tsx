@@ -38,6 +38,7 @@ import {
   todoCollection,
   usersCollection,
 } from "@/lib/collections";
+import { useCollectionPersistence } from "@/lib/use-collection-persistence";
 
 export const Route = createFileRoute(`/_authenticated/project/$projectId`)({
   component: ProjectPage,
@@ -63,6 +64,11 @@ function ProjectPage() {
     null
   );
   const comboboxAnchor = useComboboxAnchor();
+
+  // Enable IndexedDB persistence
+  useCollectionPersistence(projectCollection);
+  useCollectionPersistence(todoCollection);
+  useCollectionPersistence(usersCollection);
 
   const { data: todos } = useLiveQuery(
     (q) =>

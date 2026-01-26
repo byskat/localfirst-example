@@ -41,23 +41,37 @@ export const projectsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
         const txid = await generateTxId(tx);
+
+        // First, check if user has permission (owner or in shared_user_ids)
+        const [project] = await tx
+          .select()
+          .from(projectsTable)
+          .where(eq(projectsTable.id, input.id));
+
+        if (!project) {
+          throw new TRPCError({
+            code: `NOT_FOUND`,
+            message: `Project not found`,
+          });
+        }
+
+        const isOwner = project.owner_id === ctx.session.user.id;
+        const hasEditPermission = project.shared_user_ids.includes(
+          ctx.session.user.id
+        );
+
+        if (!isOwner && !hasEditPermission) {
+          throw new TRPCError({
+            code: `FORBIDDEN`,
+            message: `You do not have permission to update this project`,
+          });
+        }
+
         const [updatedItem] = await tx
           .update(projectsTable)
           .set(input.data)
-          .where(
-            and(
-              eq(projectsTable.id, input.id),
-              eq(projectsTable.owner_id, ctx.session.user.id)
-            )
-          )
+          .where(eq(projectsTable.id, input.id))
           .returning();
-
-        if (!updatedItem) {
-          throw new TRPCError({
-            code: `NOT_FOUND`,
-            message: `Project not found or you do not have permission to update it`,
-          });
-        }
 
         return { item: updatedItem, txid };
       });

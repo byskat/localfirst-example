@@ -18,7 +18,7 @@ import {
   Plus,
   Sun,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,16 +33,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+
 import { Separator } from "@/components/ui/separator";
+import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { CreateDashboardDialog } from "@/components/create-dashboard-dialog";
 import {
   Sidebar,
   SidebarContent,
@@ -67,7 +61,7 @@ import {
 import { useTheme } from "@/hooks/use-theme";
 import { authClient, authStateCollection } from "@/lib/auth-client";
 import { dashboardsCollection, projectCollection } from "@/lib/collections";
-import { trpc } from "@/lib/trpc-client";
+import { useCollectionPersistence } from "@/lib/use-collection-persistence";
 
 export const Route = createFileRoute(`/_authenticated`)({
   ssr: false, // Disable SSR - run beforeLoad only on client
@@ -127,75 +121,21 @@ function AuthenticatedLayout() {
   const activeProjectId = params.projectId;
   const activeDashboardId = params.dashboardId;
   const [showNewProjectForm, setShowNewProjectForm] = useState(false);
-  const [newProjectName, setNewProjectName] = useState(``);
   const [showNewDashboardForm, setShowNewDashboardForm] = useState(false);
-  const [newDashboardName, setNewDashboardName] = useState(``);
 
-  const { data: projects, isLoading } = useLiveQuery((q) =>
-    q.from({ projectCollection })
-  );
+  // Enable IndexedDB persistence
+  useCollectionPersistence(projectCollection);
+  useCollectionPersistence(dashboardsCollection);
+
+  const { data: projects } = useLiveQuery((q) => q.from({ projectCollection }));
 
   const { data: dashboards } = useLiveQuery((q) =>
     q.from({ dashboardsCollection })
   );
 
-  // Create an initial default project if the user doesn't yet have any.
-  useEffect(() => {
-    if (session && projects && !isLoading) {
-      const hasProject = projects.length > 0;
-      if (!hasProject) {
-        projectCollection.insert({
-          id: Math.floor(Math.random() * 100000),
-          name: `Default`,
-          description: `Default project`,
-          owner_id: session.user.id,
-          shared_user_ids: [],
-          created_at: new Date(),
-        });
-      }
-    }
-  }, [session, projects, isLoading]);
-
   const handleLogout = async () => {
     await authClient.signOut();
     navigate({ to: `/login` });
-  };
-
-  const handleCreateProject = async () => {
-    if (newProjectName.trim() && session) {
-      const result = await trpc.projects.create.mutate({
-        name: newProjectName.trim(),
-        description: ``,
-        owner_id: session.user.id,
-        shared_user_ids: [],
-      });
-      setNewProjectName(``);
-      setShowNewProjectForm(false);
-
-      navigate({
-        to: `/project/$projectId`,
-        params: { projectId: result.item.id.toString() },
-      });
-    }
-  };
-
-  const handleCreateDashboard = async () => {
-    if (newDashboardName.trim() && session) {
-      const result = await trpc.dashboards.create.mutate({
-        name: newDashboardName.trim(),
-        description: ``,
-        owner_id: session.user.id,
-        shared_user_ids: [],
-        editor_ids: [],
-      });
-      setNewDashboardName(``);
-      setShowNewDashboardForm(false);
-
-      navigate({
-        to: `/dashboard/$dashboardId`,
-        params: { dashboardId: result.item.id.toString() },
-      });
-    }
   };
 
   if (isPending) {
@@ -216,19 +156,19 @@ function AuthenticatedLayout() {
         activeDashboardId={activeDashboardId}
         location={location}
         handleLogout={handleLogout}
-        showNewProjectForm={showNewProjectForm}
         setShowNewProjectForm={setShowNewProjectForm}
-        newProjectName={newProjectName}
-        setNewProjectName={setNewProjectName}
-        handleCreateProject={handleCreateProject}
-        showNewDashboardForm={showNewDashboardForm}
         setShowNewDashboardForm={setShowNewDashboardForm}
-        newDashboardName={newDashboardName}
-        setNewDashboardName={setNewDashboardName}
-        handleCreateDashboard={handleCreateDashboard}
       />
-      <SidebarInset className="overflow-x-hidden">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+      <CreateProjectDialog
+        open={showNewProjectForm}
+        onOpenChange={setShowNewProjectForm}
+      />
+      <CreateDashboardDialog
+        open={showNewDashboardForm}
+        onOpenChange={setShowNewDashboardForm}
+      />
+      <SidebarInset className="flex flex-col h-screen overflow-hidden">
+        <header className="sticky top-0 z-10 bg-background flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -261,7 +201,7 @@ function AuthenticatedLayout() {
                       </BreadcrumbPage>
                     </BreadcrumbItem>
                   </>
-                ) : location.pathname === "/" ? (
+                ) : location.pathname === "/projects" ? (
                   <>
                     <BreadcrumbSeparator className="hidden md:block" />
                     <BreadcrumbItem>
@@ -272,7 +212,7 @@ function AuthenticatedLayout() {
                   <>
                     <BreadcrumbSeparator className="hidden md:block" />
                     <BreadcrumbItem>
-                      <BreadcrumbLink render={<Link to="/" />}>
+                      <BreadcrumbLink render={<Link to="/projects" />}>
                         Projects
                       </BreadcrumbLink>
                     </BreadcrumbItem>
@@ -309,16 +249,8 @@ function AuthenticatedSidebar({
   activeDashboardId,
   location,
   handleLogout,
-  showNewProjectForm,
   setShowNewProjectForm,
-  newProjectName,
-  setNewProjectName,
-  handleCreateProject,
-  showNewDashboardForm,
   setShowNewDashboardForm,
-  newDashboardName,
-  setNewDashboardName,
-  handleCreateDashboard,
 }: {
   session: {
     user: {
@@ -340,229 +272,145 @@ function AuthenticatedSidebar({
   activeDashboardId: string | undefined;
   location: { pathname: string };
   handleLogout: () => void;
-  showNewProjectForm: boolean;
   setShowNewProjectForm: (show: boolean) => void;
-  newProjectName: string;
-  setNewProjectName: (name: string) => void;
-  handleCreateProject: () => void;
-  showNewDashboardForm: boolean;
   setShowNewDashboardForm: (show: boolean) => void;
-  newDashboardName: string;
-  setNewDashboardName: (name: string) => void;
-  handleCreateDashboard: () => void;
 }) {
   const { state } = useSidebar();
   const isCollapsed = state === "collapsed";
 
   return (
-    <>
-      <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton size="lg">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Atom className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Localfirst</span>
-                  <span className="truncate text-xs">Projects</span>
-                </div>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarGroup>
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <Collapsible defaultOpen className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger
-                      render={<SidebarMenuButton tooltip="Projects" />}
-                    >
-                      <ListTodo />
-                      <span>Projects</span>
-                      <ChevronRight className="ml-auto transition-transform group-data-open/collapsible:rotate-90" />
-                    </CollapsibleTrigger>
-                    <SidebarMenuAction
-                      onClick={() => setShowNewProjectForm(true)}
-                    >
-                      <Plus />
-                      <span className="sr-only">Add Project</span>
-                    </SidebarMenuAction>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {projects.map((project) => (
-                          <SidebarMenuSubItem key={project.id}>
-                            <SidebarMenuSubButton
-                              render={
-                                <Link
-                                  to="/project/$projectId"
-                                  params={{ projectId: project.id.toString() }}
-                                />
-                              }
-                              isActive={
-                                location.pathname.startsWith("/project/") &&
-                                activeProjectId === project.id.toString()
-                              }
-                            >
-                              <span className="truncate">{project.name}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-                <Collapsible defaultOpen className="group/collapsible">
-                  <SidebarMenuItem>
-                    <CollapsibleTrigger
-                      render={<SidebarMenuButton tooltip="Dashboards" />}
-                    >
-                      <LayoutDashboard />
-                      <span>Dashboards</span>
-                      <ChevronRight className="ml-auto transition-transform group-data-open/collapsible:rotate-90" />
-                    </CollapsibleTrigger>
-                    <SidebarMenuAction
-                      onClick={() => setShowNewDashboardForm(true)}
-                    >
-                      <Plus />
-                      <span className="sr-only">Add Dashboard</span>
-                    </SidebarMenuAction>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {dashboards?.map((dashboard) => (
-                          <SidebarMenuSubItem key={dashboard.id}>
-                            <SidebarMenuSubButton
-                              render={
-                                <Link
-                                  to="/dashboard/$dashboardId"
-                                  params={{
-                                    dashboardId: dashboard.id.toString(),
-                                  }}
-                                />
-                              }
-                              isActive={
-                                location.pathname.startsWith("/dashboard/") &&
-                                activeDashboardId === dashboard.id.toString()
-                              }
-                            >
-                              <span className="truncate">{dashboard.name}</span>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </SidebarMenuItem>
-                </Collapsible>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        </SidebarContent>
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              {isCollapsed ? (
-                <SidebarMenuButton onClick={handleLogout} tooltip="Sign out">
-                  <LogOut className="h-4 w-4" />
-                </SidebarMenuButton>
-              ) : (
-                <div className="px-2 py-2 space-y-2">
-                  <div className="text-sm text-muted-foreground truncate">
-                    {session.user.email}
-                  </div>
-                  <Button
-                    onClick={handleLogout}
-                    variant="outline"
-                    size="sm"
-                    className="w-full"
+    <Sidebar collapsible="icon">
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                <Atom className="size-4" />
+              </div>
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-semibold">Localfirst</span>
+                <span className="truncate text-xs">Projects</span>
+              </div>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <Collapsible defaultOpen className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger
+                    render={<SidebarMenuButton tooltip="Projects" />}
                   >
-                    Sign out
-                  </Button>
+                    <ListTodo />
+                    <span>Projects</span>
+                    <ChevronRight className="ml-auto transition-transform group-data-open/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                  <SidebarMenuAction
+                    onClick={() => setShowNewProjectForm(true)}
+                  >
+                    <Plus />
+                    <span className="sr-only">Add Project</span>
+                  </SidebarMenuAction>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {projects.map((project) => (
+                        <SidebarMenuSubItem key={project.id}>
+                          <SidebarMenuSubButton
+                            render={
+                              <Link
+                                to="/project/$projectId"
+                                params={{ projectId: project.id.toString() }}
+                              />
+                            }
+                            isActive={
+                              location.pathname.startsWith("/project/") &&
+                              activeProjectId === project.id.toString()
+                            }
+                          >
+                            <span className="truncate">{project.name}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+              <Collapsible defaultOpen className="group/collapsible">
+                <SidebarMenuItem>
+                  <CollapsibleTrigger
+                    render={<SidebarMenuButton tooltip="Dashboards" />}
+                  >
+                    <LayoutDashboard />
+                    <span>Dashboards</span>
+                    <ChevronRight className="ml-auto transition-transform group-data-open/collapsible:rotate-90" />
+                  </CollapsibleTrigger>
+                  <SidebarMenuAction
+                    onClick={() => setShowNewDashboardForm(true)}
+                  >
+                    <Plus />
+                    <span className="sr-only">Add Dashboard</span>
+                  </SidebarMenuAction>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                      {dashboards?.map((dashboard) => (
+                        <SidebarMenuSubItem key={dashboard.id}>
+                          <SidebarMenuSubButton
+                            render={
+                              <Link
+                                to="/dashboard/$dashboardId"
+                                params={{
+                                  dashboardId: dashboard.id.toString(),
+                                }}
+                              />
+                            }
+                            isActive={
+                              location.pathname.startsWith("/dashboard/") &&
+                              activeDashboardId === dashboard.id.toString()
+                            }
+                          >
+                            <span className="truncate">{dashboard.name}</span>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+      <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            {isCollapsed ? (
+              <SidebarMenuButton onClick={handleLogout} tooltip="Sign out">
+                <LogOut className="h-4 w-4" />
+              </SidebarMenuButton>
+            ) : (
+              <div className="px-2 py-2 space-y-2">
+                <div className="text-sm text-muted-foreground truncate">
+                  {session.user.email}
                 </div>
-              )}
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-        <SidebarRail />
-      </Sidebar>
-      <Dialog open={showNewProjectForm} onOpenChange={setShowNewProjectForm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Project</DialogTitle>
-            <DialogDescription>
-              Add a new project to organize your todos.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="text"
-                value={newProjectName}
-                onChange={(e) => setNewProjectName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleCreateProject();
-                  }
-                }}
-                placeholder="Project name"
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowNewProjectForm(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreateProject}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={showNewDashboardForm}
-        onOpenChange={setShowNewDashboardForm}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Create New Dashboard</DialogTitle>
-            <DialogDescription>
-              Add a new dashboard to visualize your data.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Input
-                type="text"
-                value={newDashboardName}
-                onChange={(e) => setNewDashboardName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleCreateDashboard();
-                  }
-                }}
-                placeholder="Dashboard name"
-                autoFocus
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowNewDashboardForm(false)}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleCreateDashboard}>Create</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+                <Button
+                  onClick={handleLogout}
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                >
+                  Sign out
+                </Button>
+              </div>
+            )}
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 }
 

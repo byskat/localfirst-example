@@ -1,7 +1,7 @@
 import { eq, useLiveQuery } from "@tanstack/react-db";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowDownRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Responsive as ResponsiveGridLayout } from "react-grid-layout";
 import type { Layout, LayoutItem } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
@@ -17,6 +17,7 @@ import {
   usersCollection,
   widgetsCollection,
 } from "@/lib/collections";
+import { useCollectionPersistence } from "@/lib/use-collection-persistence";
 
 export const Route = createFileRoute(`/_authenticated/dashboard/$dashboardId`)({
   loader: async () => {
@@ -33,6 +34,11 @@ function DashboardDetail() {
   const { dashboardId } = Route.useParams();
   const { data: session } = authClient.useSession();
   const navigate = useNavigate();
+
+  // Enable IndexedDB persistence
+  useCollectionPersistence(dashboardsCollection);
+  useCollectionPersistence(widgetsCollection);
+  useCollectionPersistence(usersCollection);
 
   const { data: dashboards } = useLiveQuery(
     (q) =>
@@ -57,18 +63,23 @@ function DashboardDetail() {
 
   const { data: users } = useLiveQuery((q) => q.from({ usersCollection }), []);
 
-  const [containerWidth, setContainerWidth] = useState(1200);
+  const [containerWidth, setContainerWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth - 300 : 1200
+  );
   const [previewBreakpoint, setPreviewBreakpoint] = useState<
     "default" | "mobile" | "tablet" | "desktop"
   >("default");
   const containerRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
         setContainerWidth(containerRef.current.offsetWidth);
       }
     };
+
+    // Initial measurement
+    updateWidth();
 
     if (!containerRef.current) return;
 
