@@ -1,10 +1,15 @@
 import {
+  Area,
+  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   XAxis,
   YAxis,
 } from "recharts";
@@ -37,8 +42,13 @@ interface ChartSeries {
 interface ChartWidgetConfig {
   series?: ChartSeries[];
   xAxisKey?: string;
-  chartType?: "bar" | "line" | "area";
+  chartType?: "bar" | "line" | "area" | "pie";
   showGrid?: boolean;
+  showLegend?: boolean;
+  // For pie charts
+  nameKey?: string;
+  dataKey?: string;
+  colors?: string[];
 }
 
 interface ChartWidgetProps {
@@ -66,21 +76,73 @@ export function ChartWidget({
   const xAxisKey = chartConfig.xAxisKey ?? "month";
   const chartType = chartConfig.chartType ?? "bar";
   const showGrid = chartConfig.showGrid ?? true;
+  const showLegend = chartConfig.showLegend ?? true;
 
-  // Build recharts config from series
+  // Default pie chart colors - using direct values instead of CSS variables
+  const DEFAULT_CHART_COLORS = [
+    "#2563eb", // blue
+    "#16a34a", // green
+    "#dc2626", // red
+    "#ca8a04", // yellow
+    "#9333ea", // purple
+  ];
+
+  // Use config colors if provided, otherwise use defaults
+  const CHART_COLORS = chartConfig.colors ?? DEFAULT_CHART_COLORS;
+
+  // Build recharts config from series (or pie data)
   const rechartsConfig: ChartConfig = {};
-  for (const s of series) {
-    rechartsConfig[s.key] = {
-      label: s.label,
-      color: s.color ?? `hsl(var(--chart-${series.indexOf(s) + 1}))`,
-    };
+  if (chartType === "pie" && chartConfig.nameKey) {
+    // For pie charts, build config from data
+    data.forEach((item, index) => {
+      const name = item[chartConfig.nameKey!];
+      if (name) {
+        rechartsConfig[name] = {
+          label: name,
+          color: CHART_COLORS[index % CHART_COLORS.length],
+        };
+      }
+    });
+  } else {
+    // For other charts, build from series
+    for (const s of series) {
+      rechartsConfig[s.key] = {
+        label: s.label,
+        color: s.color ?? `hsl(var(--chart-${series.indexOf(s) + 1}))`,
+      };
+    }
   }
 
   return (
     <div className="w-full h-full relative">
       <div className="absolute inset-0">
         <ChartContainer config={rechartsConfig} className="w-full h-full">
-          {chartType === "line" ? (
+          {chartType === "pie" ? (
+            <PieChart>
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+              <Pie
+                data={data}
+                dataKey={chartConfig.dataKey ?? "value"}
+                nameKey={chartConfig.nameKey ?? "name"}
+                cx="50%"
+                cy="50%"
+                innerRadius="0%"
+                outerRadius="70%"
+                label={(entry) => `${entry.name}: ${entry.value}%`}
+                labelLine
+              >
+                {data.map((entry, index) => (
+                  <Cell
+                    key={
+                      entry[chartConfig.nameKey ?? "name"] ?? `cell-${index}`
+                    }
+                    fill={CHART_COLORS[index % CHART_COLORS.length]}
+                  />
+                ))}
+              </Pie>
+              {showLegend && <Legend />}
+            </PieChart>
+          ) : chartType === "line" ? (
             <LineChart data={data}>
               {showGrid && <CartesianGrid vertical={false} />}
               <XAxis
@@ -94,7 +156,7 @@ export function ChartWidget({
               />
               <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Legend />
+              {showLegend && <Legend />}
               {series.map((s) => (
                 <Line
                   key={s.key}
@@ -108,6 +170,34 @@ export function ChartWidget({
                 />
               ))}
             </LineChart>
+          ) : chartType === "area" ? (
+            <AreaChart data={data}>
+              {showGrid && <CartesianGrid vertical={false} />}
+              <XAxis
+                dataKey={xAxisKey}
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+                tickFormatter={(value) =>
+                  typeof value === "string" ? value.slice(0, 3) : value
+                }
+              />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              {showLegend && <Legend />}
+              {series.map((s) => (
+                <Area
+                  key={s.key}
+                  type="monotone"
+                  dataKey={s.key}
+                  name={s.label}
+                  stroke={s.color ?? `var(--color-${s.key})`}
+                  fill={s.color ?? `var(--color-${s.key})`}
+                  fillOpacity={0.2}
+                  strokeWidth={s.strokeWidth ?? 2}
+                />
+              ))}
+            </AreaChart>
           ) : (
             <BarChart data={data}>
               {showGrid && <CartesianGrid vertical={false} />}
@@ -122,7 +212,7 @@ export function ChartWidget({
               />
               <YAxis tickLine={false} axisLine={false} />
               <ChartTooltip content={<ChartTooltipContent />} />
-              <Legend />
+              {showLegend && <Legend />}
               {series.map((s) => (
                 <Bar
                   key={s.key}
