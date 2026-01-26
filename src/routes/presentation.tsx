@@ -305,12 +305,12 @@ function PresentationPage() {
                     <p>
                       Referència:{" "}
                       <a
-                        href="https://martinfowler.com/articles/patterns-of-distributed-systems/"
+                        href="https://www.youtube.com/watch?v=jxuXGeMJsBU"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
                       >
-                        Patterns of Distributed Systems - M. Fowler
+                        Johannes Schickling: Why Local-First?
                       </a>
                     </p>
                   </div>
@@ -340,12 +340,12 @@ function PresentationPage() {
                     <p>
                       Referència:{" "}
                       <a
-                        href="https://www.inkandswitch.com/local-first/"
+                        href="https://electric-sql.com/docs/api/http"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-primary hover:underline"
                       >
-                        Local-First Software - Ink & Switch
+                        Electric SQL - HTTP API Documentation
                       </a>
                     </p>
                   </div>
