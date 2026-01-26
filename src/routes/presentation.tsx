@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import Reveal from "reveal.js";
-import { Atom } from "lucide-react";
+import { Atom, Moon, Sun } from "lucide-react";
 import "reveal.js/dist/reveal.css";
+import { useTheme } from "@/hooks/use-theme";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/presentation")({
   component: PresentationPage,
@@ -11,6 +13,7 @@ export const Route = createFileRoute("/presentation")({
 function PresentationPage() {
   const deckRef = useRef<HTMLDivElement>(null);
   const revealRef = useRef<Reveal.Api | null>(null);
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     if (!deckRef.current || revealRef.current) return;
@@ -45,6 +48,21 @@ function PresentationPage() {
 
   return (
     <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
+      {/* Theme Toggle Button */}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+        className="fixed top-4 right-4 z-50 rounded-full"
+      >
+        {theme === "dark" ? (
+          <Sun className="h-5 w-5" />
+        ) : (
+          <Moon className="h-5 w-5" />
+        )}
+        <span className="sr-only">Toggle theme</span>
+      </Button>
+
       <style>{`
         .reveal {
           width: 100%;
