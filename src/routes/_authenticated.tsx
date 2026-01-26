@@ -288,8 +288,8 @@ function AuthenticatedSidebar({
                 <Atom className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Localfirst</span>
-                <span className="truncate text-xs">Projects</span>
+                <span className="truncate font-semibold">ProjectSync</span>
+                <span className="truncate text-xs">Local-first demo</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
