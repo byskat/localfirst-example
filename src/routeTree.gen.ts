@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PresentationRouteImport } from './routes/presentation'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
@@ -24,6 +25,11 @@ import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AuthenticatedProjectProjectIdRouteImport } from './routes/_authenticated/project/$projectId'
 import { Route as AuthenticatedDashboardDashboardIdRouteImport } from './routes/_authenticated/dashboard/$dashboardId'
 
+const PresentationRoute = PresentationRouteImport.update({
+  id: '/presentation',
+  path: '/presentation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -101,6 +107,7 @@ const AuthenticatedDashboardDashboardIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/presentation': typeof PresentationRoute
   '/api/dashboard-widgets': typeof ApiDashboardWidgetsRoute
   '/api/dashboards': typeof ApiDashboardsRoute
   '/api/projects': typeof ApiProjectsRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/presentation': typeof PresentationRoute
   '/api/dashboard-widgets': typeof ApiDashboardWidgetsRoute
   '/api/dashboards': typeof ApiDashboardsRoute
   '/api/projects': typeof ApiProjectsRoute
@@ -132,6 +140,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/presentation': typeof PresentationRoute
   '/api/dashboard-widgets': typeof ApiDashboardWidgetsRoute
   '/api/dashboards': typeof ApiDashboardsRoute
   '/api/projects': typeof ApiProjectsRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/presentation'
     | '/api/dashboard-widgets'
     | '/api/dashboards'
     | '/api/projects'
@@ -164,6 +174,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/presentation'
     | '/api/dashboard-widgets'
     | '/api/dashboards'
     | '/api/projects'
@@ -180,6 +191,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/presentation'
     | '/api/dashboard-widgets'
     | '/api/dashboards'
     | '/api/projects'
@@ -197,6 +209,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PresentationRoute: typeof PresentationRoute
   ApiDashboardWidgetsRoute: typeof ApiDashboardWidgetsRoute
   ApiDashboardsRoute: typeof ApiDashboardsRoute
   ApiProjectsRoute: typeof ApiProjectsRoute
@@ -208,6 +221,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/presentation': {
+      id: '/presentation'
+      path: '/presentation'
+      fullPath: '/presentation'
+      preLoaderRoute: typeof PresentationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -333,6 +353,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  PresentationRoute: PresentationRoute,
   ApiDashboardWidgetsRoute: ApiDashboardWidgetsRoute,
   ApiDashboardsRoute: ApiDashboardsRoute,
   ApiProjectsRoute: ApiProjectsRoute,

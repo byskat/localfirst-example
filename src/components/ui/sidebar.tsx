@@ -1,5 +1,6 @@
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
+import { Link } from "@tanstack/react-router";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
@@ -704,6 +705,62 @@ function SidebarMenuSubButton({
   });
 }
 
+function SidebarMenuLink({
+  to,
+  tooltip,
+  children,
+  className,
+}: {
+  to: string;
+  tooltip?: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  const { state, isMobile } = useSidebar();
+  const isCollapsed = state === "collapsed";
+
+  const linkClasses = cn(
+    "ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground data-active:bg-sidebar-accent data-active:text-sidebar-accent-foreground data-open:hover:bg-sidebar-accent data-open:hover:text-sidebar-accent-foreground gap-2 rounded-md p-2 text-left transition-[width,height,padding] group-has-data-[sidebar=menu-action]/menu-item:pr-8 group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-2! focus-visible:ring-2 data-active:font-medium peer/menu-button flex w-full items-center overflow-hidden outline-hidden group/menu-button disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&_svg]:size-4 [&_svg]:shrink-0 h-8 text-sm",
+    className
+  );
+
+  if (!tooltip || !isCollapsed || isMobile) {
+    return (
+      <Link
+        to={to}
+        data-slot="sidebar-menu-button"
+        data-sidebar="menu-button"
+        data-size="default"
+        className={linkClasses}
+      >
+        {children}
+      </Link>
+    );
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={(props) => (
+          <Link
+            {...props}
+            to={to}
+            data-slot="sidebar-menu-button"
+            data-sidebar="menu-button"
+            data-size="default"
+            className={linkClasses}
+          />
+        )}
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent side="right" align="center">
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
+  );
+}
+
 export {
   Sidebar,
   SidebarContent,
@@ -720,6 +777,7 @@ export {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuLink,
   SidebarMenuSkeleton,
   SidebarMenuSub,
   SidebarMenuSubButton,

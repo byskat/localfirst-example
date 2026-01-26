@@ -10,6 +10,7 @@ import {
 import {
   Atom,
   ChevronRight,
+  GraduationCap,
   LayoutDashboard,
   ListTodo,
   LogOut,
@@ -50,6 +51,7 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuLink,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
@@ -380,6 +382,12 @@ function AuthenticatedSidebar({
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+              <SidebarMenuItem>
+                <SidebarMenuLink to="/presentation" tooltip="Presentation">
+                  <GraduationCap />
+                  <span>Presentation</span>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
