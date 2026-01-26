@@ -10,6 +10,7 @@ import {
 import {
   Atom,
   ChevronRight,
+  GraduationCap,
   LayoutDashboard,
   ListTodo,
   LogOut,
@@ -50,6 +51,7 @@ import {
   SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuLink,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
@@ -168,7 +170,7 @@ function AuthenticatedLayout() {
         onOpenChange={setShowNewDashboardForm}
       />
       <SidebarInset className="flex flex-col h-screen overflow-hidden">
-        <header className="sticky top-0 z-10 bg-background flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+        <header className="sticky top-0 z-9 bg-background flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
@@ -288,8 +290,8 @@ function AuthenticatedSidebar({
                 <Atom className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Localfirst</span>
-                <span className="truncate text-xs">Projects</span>
+                <span className="truncate font-semibold">ProjectSync</span>
+                <span className="truncate text-xs">Local-first demo</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -380,6 +382,12 @@ function AuthenticatedSidebar({
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+              <SidebarMenuItem>
+                <SidebarMenuLink to="/presentation" tooltip="Presentation">
+                  <GraduationCap />
+                  <span>Presentation</span>
+                </SidebarMenuLink>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

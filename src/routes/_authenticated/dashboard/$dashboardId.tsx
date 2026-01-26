@@ -7,6 +7,7 @@ import type { Layout, LayoutItem } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AddWidgetSheet } from "@/components/dashboard/add-widget-sheet";
 import { BreakpointToggle } from "@/components/dashboard/breakpoint-toggle";
 import { EditDashboardSheet } from "@/components/dashboard/edit-dashboard-sheet";
@@ -70,6 +71,32 @@ function DashboardDetail() {
     "default" | "mobile" | "tablet" | "desktop"
   >("default");
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const [deleteDashboardDialog, confirmDeleteDashboard] = useConfirmDialog({
+    title: "Delete Dashboard",
+    description: `Are you sure you want to delete "${dashboard?.name}"? This will also delete all widgets in this dashboard.`,
+    confirmLabel: "Delete",
+    onConfirm: () => {
+      if (dashboard) {
+        dashboardsCollection.delete(dashboard.id);
+        navigate({ to: `/dashboards` });
+      }
+    },
+  });
+
+  const [widgetToDelete, setWidgetToDelete] = useState<number | null>(null);
+  const widgetToDeleteData = widgets?.find((w) => w.id === widgetToDelete);
+  const [deleteWidgetDialog, confirmDeleteWidget] = useConfirmDialog({
+    title: "Delete Widget",
+    description: `Delete widget "${widgetToDeleteData?.title}"?`,
+    confirmLabel: "Delete",
+    onConfirm: () => {
+      if (widgetToDelete) {
+        widgetsCollection.delete(widgetToDelete);
+        setWidgetToDelete(null);
+      }
+    },
+  });
 
   useLayoutEffect(() => {
     const updateWidth = () => {
@@ -195,14 +222,7 @@ function DashboardDetail() {
   };
 
   const handleDelete = () => {
-    if (
-      globalThis.confirm(
-        `Are you sure you want to delete "${dashboard.name}"? This will also delete all widgets in this dashboard.`
-      )
-    ) {
-      dashboardsCollection.delete(dashboard.id);
-      navigate({ to: `/dashboards` });
-    }
+    confirmDeleteDashboard();
   };
 
   const gridLayouts: Partial<Record<string, Layout>> = {
@@ -363,11 +383,8 @@ function DashboardDetail() {
                       widget={widget}
                       canEdit={canEdit}
                       onDelete={() => {
-                        if (
-                          globalThis.confirm(`Delete widget "${widget.title}"?`)
-                        ) {
-                          widgetsCollection.delete(widget.id);
-                        }
+                        setWidgetToDelete(widget.id);
+                        confirmDeleteWidget();
                       }}
                     />
                   </div>
@@ -377,6 +394,8 @@ function DashboardDetail() {
           </div>
         </div>
       )}
+      {deleteDashboardDialog}
+      {deleteWidgetDialog}
     </div>
   );
 }

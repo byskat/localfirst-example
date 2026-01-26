@@ -21,7 +21,11 @@ export const Route = createRootRoute({
         content: `width=device-width, initial-scale=1`,
       },
       {
-        title: `TanStack Start/DB/Electric Starter`,
+        title: `ProjectSync - Local-First demo`,
+      },
+      {
+        name: `description`,
+        content: `Real-time collaborative project management with dashboards, widgets, and offline-first sync powered by Electric SQL`,
       },
     ],
   }),
@@ -58,6 +62,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <head>
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <HeadContent />
       </head>
       <body>
