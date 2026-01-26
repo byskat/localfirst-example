@@ -41,23 +41,37 @@ export const dashboardsRouter = router({
     .mutation(async ({ ctx, input }) => {
       const result = await ctx.db.transaction(async (tx) => {
         const txid = await generateTxId(tx);
+
+        // First, check if user has permission (owner or in editor_ids)
+        const [dashboard] = await tx
+          .select()
+          .from(dashboardsTable)
+          .where(eq(dashboardsTable.id, input.id));
+
+        if (!dashboard) {
+          throw new TRPCError({
+            code: `NOT_FOUND`,
+            message: `Dashboard not found`,
+          });
+        }
+
+        const isOwner = dashboard.owner_id === ctx.session.user.id;
+        const hasEditPermission = dashboard.editor_ids.includes(
+          ctx.session.user.id
+        );
+
+        if (!isOwner && !hasEditPermission) {
+          throw new TRPCError({
+            code: `FORBIDDEN`,
+            message: `You do not have permission to update this dashboard`,
+          });
+        }
+
         const [updatedItem] = await tx
           .update(dashboardsTable)
           .set(input.data)
-          .where(
-            and(
-              eq(dashboardsTable.id, input.id),
-              eq(dashboardsTable.owner_id, ctx.session.user.id)
-            )
-          )
+          .where(eq(dashboardsTable.id, input.id))
           .returning();
-
-        if (!updatedItem) {
-          throw new TRPCError({
-            code: `NOT_FOUND`,
-            message: `Dashboard not found or you do not have permission to update it`,
-          });
-        }
 
         return { item: updatedItem, txid };
       });

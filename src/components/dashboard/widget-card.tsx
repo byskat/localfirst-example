@@ -29,12 +29,12 @@ export function WidgetCard({
           {canEdit && (
             <div className="flex items-center gap-2">
               <ButtonGroup>
-              {widget.type === "chart" && (
-                <EditChartWidgetSheet widget={widget} />
-              )}
-              {widget.type === "table" && (
-                <EditTableWidgetSheet widget={widget} />
-              )}
+                {widget.type === "chart" && (
+                  <EditChartWidgetSheet widget={widget} />
+                )}
+                {widget.type === "table" && (
+                  <EditTableWidgetSheet widget={widget} />
+                )}
                 <Button
                   variant="outline-destructive"
                   size="icon"
