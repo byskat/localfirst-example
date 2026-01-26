@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Edit2, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Combobox,
   ComboboxChip,
@@ -95,6 +96,19 @@ function ProjectPage() {
     [projectId]
   );
   const project = projects[0];
+
+  const [deleteProjectDialog, confirmDeleteProject] = useConfirmDialog({
+    title: "Delete Project",
+    description: `Are you sure you want to delete "${project?.name}"? This action cannot be undone.`,
+    confirmLabel: "Delete",
+    onConfirm: () => {
+      if (project) {
+        projectCollection.delete(project.id);
+        setShowEditSheet(false);
+        navigate({ to: "/" });
+      }
+    },
+  });
 
   const addTodo = () => {
     if (newTodoText.trim() && session) {
@@ -354,17 +368,7 @@ function ProjectPage() {
                   <Button
                     variant="destructive"
                     className="w-full"
-                    onClick={() => {
-                      if (
-                        globalThis.confirm(
-                          `Are you sure you want to delete "${project.name}"? This action cannot be undone.`
-                        )
-                      ) {
-                        projectCollection.delete(project.id);
-                        setShowEditSheet(false);
-                        navigate({ to: "/" });
-                      }
-                    }}
+                    onClick={confirmDeleteProject}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete Project
@@ -375,6 +379,7 @@ function ProjectPage() {
           </div>
         </SheetContent>
       </Sheet>
+      {deleteProjectDialog}
     </div>
   );
 }
