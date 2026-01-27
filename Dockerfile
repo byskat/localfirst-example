@@ -1,5 +1,5 @@
 # Dockerfile for TanStack Start app
-FROM node:22-alpine AS base
+FROM node:24.13-alpine3.22 AS base
 
 # Install pnpm and dependencies
 RUN corepack enable && corepack prepare pnpm@latest --activate
