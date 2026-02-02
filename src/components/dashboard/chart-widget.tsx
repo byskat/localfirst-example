@@ -157,11 +157,8 @@ export function ChartWidget({
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                tickFormatter={(value) =>
-                  typeof value === "string" ? value.slice(0, 3) : value
-                }
               />
-              <YAxis tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} width={80} />
               <ChartTooltip content={<ChartTooltipContent />} />
               {showLegend && <Legend />}
               {series.map((s) => (
@@ -185,11 +182,8 @@ export function ChartWidget({
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                tickFormatter={(value) =>
-                  typeof value === "string" ? value.slice(0, 3) : value
-                }
               />
-              <YAxis tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} width={80} />
               <ChartTooltip content={<ChartTooltipContent />} />
               {showLegend && <Legend />}
               {series.map((s) => (
@@ -264,11 +258,8 @@ export function ChartWidget({
                 tickLine={false}
                 tickMargin={10}
                 axisLine={false}
-                tickFormatter={(value) =>
-                  typeof value === "string" ? value.slice(0, 3) : value
-                }
               />
-              <YAxis tickLine={false} axisLine={false} />
+              <YAxis tickLine={false} axisLine={false} width={80} />
               <ChartTooltip content={<ChartTooltipContent />} />
               {showLegend && <Legend />}
               {series.map((s) => (
