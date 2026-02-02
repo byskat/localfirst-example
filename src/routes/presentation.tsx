@@ -5,6 +5,8 @@ import { Atom, Moon, Sun } from "lucide-react";
 import "reveal.js/dist/reveal.css";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "@/components/ui/button";
+import { LocalFirstDiagram } from "@/components/presentation/diagrams/local-first-diagram";
+import { RestDiagram } from "@/components/presentation/diagrams/rest-diagram";
 
 export const Route = createFileRoute("/presentation")({
   component: PresentationPage,
@@ -320,14 +322,9 @@ function PresentationPage() {
                 <div className="flex flex-col items-center gap-8">
                   {/* Traditional Architecture Diagram - Placeholder */}
                   <div className="w-full h-80 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg bg-muted/30 p-8">
-                    <p className="text-2xl text-muted-foreground mb-4">
-                      [ Diagrama REST Tradicional ]
-                    </p>
-                    <code className="text-sm text-center">
-                      [Navegador] ←→ [Servidor API] ←→ [Base de Dades]
-                      <br />
-                      &nbsp;&nbsp;&nbsp;HTTP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SQL
-                    </code>
+                    <div className="w-99">
+                      <RestDiagram />
+                    </div>
                   </div>
 
                   <div className="fragment grid grid-cols-2 gap-6 w-full mt-4">
@@ -381,23 +378,7 @@ function PresentationPage() {
                 <div className="flex flex-col items-center gap-8">
                   {/* Local-First Architecture Diagram - Placeholder */}
                   <div className="w-full h-80 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg bg-muted/30 p-8">
-                    <p className="text-2xl text-muted-foreground mb-4">
-                      [ Diagrama Local-First ]
-                    </p>
-                    <code className="text-sm text-center">
-                      [Client/DB Local] ←→ [Motor Sync] ←→ [Postgres]
-                      <br />
-                      &nbsp;&nbsp;&nbsp;(Memòria/IndexedDB/...)&nbsp;&nbsp;(Electric)&nbsp;&nbsp;&nbsp;(Font
-                      Veritat)
-                      <br />
-                      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↕&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↕
-                      <br />
-                      &nbsp;&nbsp;Consultes&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HTTP
-                      Streaming
-                      <br />
-                      &nbsp;&nbsp;Mutacions&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ Long
-                      Polling
-                    </code>
+                    <LocalFirstDiagram />
                   </div>
 
                   <div className="fragment grid grid-cols-3 gap-4 w-full mt-4">
@@ -627,7 +608,7 @@ todoCollection.delete(todoId)  // txid: "12346" quan sincronitza
           >
             <div className="w-full px-20">
               <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
-                Shapes: El Concepte Central
+                Shapes: The Key Concept
               </h2>
               <div className="space-y-6 max-w-5xl mx-auto">
                 <div
@@ -702,7 +683,7 @@ todoCollection.delete(todoId)  // txid: "12346" quan sincronitza
 
                   <div className="p-5 rounded-xl bg-accent/5 border border-accent/30">
                     <h4 className="text-lg font-semibold mb-3">Com Funciona</h4>
-                    <ol className="space-y-2 text-xs leading-relaxed">
+                    <ol className="space-y-2 text-sm leading-relaxed">
                       <li>
                         <strong>1. Sync inicial:</strong> Client demana shape{" "}
                         <code className="bg-muted px-1 rounded">
@@ -746,7 +727,7 @@ todoCollection.delete(todoId)  // txid: "12346" quan sincronitza
           >
             <div className="w-full px-20">
               <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
-                Shapes: El Concepte Central 2{" "}
+                Shapes: The Key Concept 2{" "}
                 <span className="text-xs">electric boogaloo</span>
               </h2>
               <div className="max-w-5xl mx-auto relative min-h-[400px]">
@@ -1311,12 +1292,12 @@ onUpdate: async ({ transaction }) => {
                     <ul className="space-y-2 text-sm">
                       <li>
                         <a
-                          href="https://linear.app/method/offline-first"
+                          href="https://linear.app/now/scaling-the-linear-sync-engine"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-primary hover:underline"
                         >
-                          Linear - Offline-First Architecture
+                          Linear - Scaling the Linear Sync Engine
                         </a>
                       </li>
                       <li>
@@ -1382,13 +1363,13 @@ onUpdate: async ({ transaction }) => {
                   href="https://electric-sql.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-lg font-medium"
+                  className="px-6 py-3 rounded-lg bg-muted text-foreground hover:bg-muted/80 transition-colors text-lg font-medium"
                 >
                   electric-sql.com
                 </a>
                 <a
                   href="/"
-                  className="px-6 py-3 rounded-lg bg-muted text-foreground hover:bg-muted/80 transition-colors text-lg font-medium"
+                  className="px-6 py-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors text-lg font-medium"
                 >
                   Veure Demo
                 </a>
