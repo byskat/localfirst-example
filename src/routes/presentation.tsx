@@ -338,7 +338,7 @@ function PresentationPage() {
                     </div>
                     <div className="p-4 rounded-lg bg-card border border-border">
                       <p className="text-sm font-semibold mb-2">
-                        🚪 Servidor com a guardian
+                        🚪 Servidor centralitzat
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Controla accés, executa lògica, retorna dades
@@ -387,7 +387,7 @@ function PresentationPage() {
                         💾 Queries Locals
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Lectures des de store local, zero latència
+                        Lectures des de store local, sense latència
                       </p>
                     </div>
                     <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
@@ -870,7 +870,7 @@ todoCollection.delete(todoId)  // txid: "12346" quan sincronitza
                       📖 Lectures: Electric → Local
                     </h3>
                     <p className="text-muted-foreground text-sm mb-3">
-                      Totes les lectures des del store local. Zero latència,
+                      Totes les lectures des del store local. Sense latència,
                       funciona offline.
                     </p>
                     <code className="block p-3 bg-muted rounded text-xs whitespace-pre">
