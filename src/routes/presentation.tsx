@@ -430,15 +430,24 @@ function PresentationPage() {
             data-transition="zoom-in"
           >
             <div className="w-full px-20">
-              <h2 className="text-5xl font-bold text-foreground mb-12 text-center">
+              <h2 className="text-5xl font-bold text-foreground mb-3 text-center">
                 CRDTs i Resolució de Conflictes
               </h2>
-              <div className="max-w-5xl mx-auto space-y-8">
+              <p className="text-xl text-muted-foreground text-center mb-6">
+                <span className="font-semibold">CRDT</span> = Conflict-free
+                Replicated Data Types
+                <br />
+                <span className="text-base">
+                  Dades que es combinen automàticament sense intervenció manual
+                  (auto merge)
+                </span>
+              </p>
+              <div className="max-w-5xl mx-auto space-y-4">
                 <div
-                  className="fragment p-6 rounded-xl bg-card border-2 border-destructive/30"
+                  className="fragment p-4 rounded-xl bg-card border-2 border-destructive/30"
                   data-fragment-index="0"
                 >
-                  <h3 className="text-2xl font-semibold mb-4 text-destructive">
+                  <h3 className="text-xl font-semibold mb-2 text-destructive">
                     El Problema
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -464,16 +473,17 @@ function PresentationPage() {
                   </p>
                 </div>
 
-                <div className="relative min-h-[280px]">
+                <div className="relative min-h-[240px]">
+                  {/* REST Solution */}
                   <div
                     className="fragment fade-out absolute inset-0"
                     data-fragment-index="2"
                   >
                     <div
-                      className="fragment p-6 rounded-xl bg-card border-2 border-border"
+                      className="fragment p-4 rounded-xl bg-card border-2 border-border"
                       data-fragment-index="1"
                     >
-                      <h3 className="text-2xl font-semibold mb-4">
+                      <h3 className="text-xl font-semibold mb-2">
                         Solució Tradicional (REST)
                       </h3>
                       <div className="space-y-3">
@@ -507,19 +517,69 @@ function PresentationPage() {
                     </div>
                   </div>
 
+                  {/* CRDT Solution */}
+                  <div
+                    className="fragment fade-out absolute inset-0"
+                    data-fragment-index="3"
+                  >
+                    <div
+                      className="fragment p-4 rounded-xl bg-accent/5 border-2 border-accent/30"
+                      data-fragment-index="2"
+                    >
+                      <h3 className="text-xl font-semibold mb-2 text-accent-foreground">
+                        Solució amb CRDTs "Reals"
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Els CRDTs són estructures de dades matemàtiques
+                        dissenyades per auto resoldre canvis automàticament.
+                      </p>
+                      <div className="space-y-2">
+                        <div className="p-3 bg-accent/10 rounded">
+                          <p className="font-semibold mb-1 text-sm">
+                            📐 Propietats Matemàtiques
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Operacions commutatives, associatives i idempotents.
+                            Cada CRDT té regles de merge específiques.
+                          </p>
+                        </div>
+                        <div className="p-3 bg-accent/10 rounded">
+                          <p className="font-semibold mb-1 text-sm">
+                            🔀 Merge Automàtic
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Usuari A marca completat + Usuari B elimina → El
+                            CRDT aplica regles: "delete guanya sobre update"
+                          </p>
+                        </div>
+                        <div className="p-3 bg-accent/10 rounded">
+                          <p className="font-semibold mb-1 text-sm">
+                            ⚖️ Trade-offs
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            ✅ Resolució garantida | ❌ Més complexitat,
+                            overhead de metadades
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Electric Solution */}
                   <div
                     className="fragment fade-in absolute inset-0"
-                    data-fragment-index="2"
+                    data-fragment-index="3"
                   >
-                    <div className="p-6 rounded-xl bg-primary/5 border-2 border-primary/30">
-                      <h3 className="text-2xl font-semibold mb-4 text-primary">
+                    <div className="p-4 rounded-xl bg-primary/5 border-2 border-primary/30">
+                      <h3 className="text-xl font-semibold mb-2 text-primary">
                         Solució ElectricSQL: Transaction IDs
                       </h3>
                       <p className="text-sm text-muted-foreground mb-3">
                         Tots els canvis s'ordenen per{" "}
                         <code className="bg-muted px-1 rounded">txid</code>{" "}
                         generat pel Postgres. Ordre garantit globalment per
-                        convergència automàtica.
+                        convergència automàtica. <strong>No és un CRDT</strong>{" "}
+                        - és Last Write Wins basat en txid.
                       </p>
                       <code className="block p-3 bg-muted rounded text-xs whitespace-pre">
                         {`// Usuari A marca completat (offline)
@@ -1356,7 +1416,9 @@ onUpdate: async ({ transaction }) => {
             data-transition="zoom"
           >
             <div className="text-center space-y-8">
-              <h2 className="text-6xl font-bold text-foreground">Pos ia tah</h2>
+              <h2 className="text-6xl font-bold text-foreground">
+                Pos ia estaría
+              </h2>
               <p className="text-2xl text-muted-foreground">Preguntes?</p>
               <div className="mt-12 flex gap-4 justify-center">
                 <a
